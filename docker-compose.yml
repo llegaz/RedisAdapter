@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+   redis1: 
+    image: redis
+    container_name: redis1
+    ports:
+      - "6375:6375"
+    volumes:
+      - ./devtools/redis1/data:/data
+      - ./devtools/redis1/config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+   redis2:
+    image: redis
+    container_name: redis2
+    ports:
+      - "6376:6376"
+    volumes:
+      - ./devtools/redis2/data:/data
+      - ./devtools/redis2/config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+   redis3:
+    image: redis
+    container_name: redis3
+    ports:
+      - "6377:6377"
+    volumes:
+      - ./devtools/redis3/data:/data
+      - ./devtools/redis3/config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf

@@ -1,0 +1,8 @@
+/devtools/redis1/data
+/devtools/redis2/data
+/devtools/redis3/data
+
+/.phpunit.cache
+.phpunit.result.cache
+/.php-cs-fixer.cache
+/vendor

@@ -1,0 +1,3 @@
+<?php
+require_once './.phpunit';
+define('SKIP_FUNCTIONAL_TESTS', false);
