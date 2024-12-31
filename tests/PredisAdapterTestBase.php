@@ -6,6 +6,7 @@ namespace LLegaz\Redis\Tests;
 
 use LLegaz\Redis\RedisAdapter as SUT;
 use Predis\Client;
+use LLegaz\Redis\RedisClientInterface;
 use Predis\Response\Status;
 
 /**
