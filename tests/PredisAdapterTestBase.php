@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Predis\Tests;
+namespace LLegaz\Redis\Tests;
 
-use LLegaz\Predis\PredisAdapter as SUT;
+use LLegaz\Redis\RedisAdapter as SUT;
 use Predis\Client;
 use Predis\Response\Status;
 
