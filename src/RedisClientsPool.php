@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Predis;
+namespace LLegaz\Redis;
 
-use LLegaz\Predis\Exception\ConnectionLostException;
-use Predis\Client;
+use LLegaz\Redis\Exception\ConnectionLostException;
 
 /**
- * This class is used to manage all predis clients for the PredisAdapter class
+ * This class is used to manage all redis clients for the RedisAdapter class
  * thus ensuring no duplication of resources
  *
  *
@@ -26,8 +25,8 @@ class PredisClientsPool
     public function __destruct()
     {
         foreach (self::$clients as $client) {
-            if ($client instanceof Client && $con = $client->getConnection()) {
-                if (!$con->getParameters()->toArray()['persistent']) {
+            if ($client instanceof RedisClientInterface) {
+                if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
                 unset($client);
@@ -39,7 +38,7 @@ class PredisClientsPool
      * Multiple clients handler
      *
      * @param array $conf
-     * @return Client
+     * @return RedisClientInterface
      * @throws ConnectionLostException
      */
     public static function getClient(array $conf): Client
@@ -49,7 +48,7 @@ class PredisClientsPool
         $md5 = md5(serialize($arrKey));
         if (in_array($md5, array_keys(self::$clients))) {
             // get the client back
-            $predis = self::$clients[$md5];
+            $redis = self::$clients[$md5];
         } else {
             try {
                 self::$clients[$md5] = [];
@@ -57,10 +56,10 @@ class PredisClientsPool
                     $conf['persistent'] = count(self::$clients) + 1;
                     $conf['persistent'] = (string) $conf['persistent'];
                 }
-                $predis = new Client($conf);
+                $redis = new Client($conf);
                 // delayed connection
-                //$predis->connect();
-                self::$clients[$md5] = $predis;
+                //$redis->connect();
+                self::$clients[$md5] = $redis;
             } catch (\Exception $e) {
                 $debug = '';
                 if (defined('LLEGAZ_DEBUG')) {
@@ -71,9 +70,9 @@ class PredisClientsPool
             }
         }
 
-        if ($predis instanceof Client) {
+        if ($redis instanceof RedisClientInterface) {
 
-            return $predis;
+            return $redis;
         }
 
         throw new ConnectionLostException('Predis client was not instanciated correctly' . PHP_EOL, 500);

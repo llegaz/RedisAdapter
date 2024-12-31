@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Predis;
+namespace LLegaz\Redis;
 
 use LLegaz\Predis\Exception\ConnectionLostException;
 use LogicException;
