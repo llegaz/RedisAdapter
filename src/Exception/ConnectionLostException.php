@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Predis\Exception;
+namespace LLegaz\Redis\Exception;
 
 class ConnectionLostException extends \Predis\PredisException
 {

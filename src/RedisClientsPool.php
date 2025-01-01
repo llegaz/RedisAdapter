@@ -13,7 +13,7 @@ use LLegaz\Redis\Exception\ConnectionLostException;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class PredisClientsPool
+class RedisClientsPool
 {
     /**
      * store all redis clients (multiple clients)

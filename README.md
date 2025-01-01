@@ -17,7 +17,7 @@ apt install php8.1-xml php8.1-http php8.1-dom
 
 
 ## Dev
-install redis servers with docker
+install redis servers with docker (you will need a valid docker and docker-compose on your system)
 ```bash
 docker pull redis
 docker-compose -f docker-compose.yml up -d

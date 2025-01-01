@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis;
 
-use LLegaz\Predis\Exception\ConnectionLostException;
+use LLegaz\Redis\Exception\ConnectionLostException;
 use LogicException;
 use Predis\Client;
 use Predis\Response\Status;
@@ -16,13 +16,13 @@ use Predis\Response\Status;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class PredisAdapter implements RedisInterface
+class RedisAdapter implements RedisInterface
 {
     /**
      * current redis client in use
      *
      */
-    private ?Client $predis = null;
+    private ?RedisClientInterface $client = null;
 
     /**
      * current redis client <b>context</b> in use
@@ -40,7 +40,7 @@ class PredisAdapter implements RedisInterface
      * @param type $scheme
      * @param int $db
      */
-    public function __construct(string $host = '127.0.0.1', int $port = 6379, ?string $pwd = null, string $scheme = 'tcp', int $db = 0, ?Client $predis = null)
+    public function __construct(string $host = '127.0.0.1', int $port = 6379, ?string $pwd = null, string $scheme = 'tcp', int $db = 0, ?RedisClientInterface $client = null)
     {
         $this->context = [
             'host' => $host,
@@ -57,11 +57,11 @@ class PredisAdapter implements RedisInterface
         if ($pwd && strlen($pwd)) {
             $this->context['password'] = $pwd;
         }
-        if ($predis instanceof Client) {
+        if ($client instanceof RedisClientInterface) {
             // for the sake of units
-            $this->predis = $predis;
+            $this->client = $client;
         } else {
-            $this->predis = PredisClientsPool::getClient($this->context);
+            $this->client = RedisClientsPool::getClient($this->context);
             $this->context['client_id'] = $this->getRedisClientID();
             $this->checkIntegrity();
         }
@@ -72,12 +72,11 @@ class PredisAdapter implements RedisInterface
      */
     public function __destruct()
     {
-        if ($this->predis instanceof Client && $con = $this->predis->getConnection()) {
-            if ((!isset($this->context['persistent']) || !$this->context['persistent']) &&
-                    !$con->getParameters()->toArray()['persistent']) {
-                $this->predis->disconnect();
+        if ($this->client instanceof RedisClientInterface) {
+            if (!$this->client->isPersistent()) {
+                $this->client->disconnect();
             }
-            unset($this->predis);
+            unset($this->client);
         }
     }
 
@@ -97,9 +96,9 @@ class PredisAdapter implements RedisInterface
             $this->throwCLEx();
         }
         $this->context['database'] = $db;
-        $redisResponse = $this->predis->select($db);
+        $redisResponse = $this->client->select($db);
 
-        return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
+        return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : ($redisResponse === true);
     }
 
     /**
@@ -113,7 +112,7 @@ class PredisAdapter implements RedisInterface
             $this->throwCLEx();
         }
 
-        return $this->predis->client('list');
+        return $this->client->client('list');
     }
 
     /**
@@ -126,7 +125,7 @@ class PredisAdapter implements RedisInterface
         $ping = false;
 
         try {
-            $ping = $this->predis->ping()->getPayload();
+            $ping = $this->client->ping();
         } catch (\Exception $e) {
             $debug = '';
             if (defined('LLEGAZ_DEBUG')) {
@@ -134,14 +133,18 @@ class PredisAdapter implements RedisInterface
             }
             $this->lastErrorMsg = $e->getMessage() . $debug . PHP_EOL;
         } finally {
-            return ('PONG' === $ping);
+            if ($ping instanceof Status) {
+
+                return ('PONG' === $ping->getPayload());
+            }
+            return $ping;
         }
     }
 
     /**
      * constructor helper
      */
-    public static function createPredisAdapter(array $conf): self
+    public static function createRedisAdapter(array $conf): self
     {
         $host = $conf['host'] ?? '127.0.0.1';
         $port = $conf['port'] ?? 6379;

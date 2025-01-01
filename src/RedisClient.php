@@ -22,7 +22,7 @@ class RedisClient extends Redis implements RedisClientInterface {
     }
 
     public function __toString(): string {
-        return "redis";
+        return self::PHP_REDIS;
     }
 
 }
