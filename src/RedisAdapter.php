@@ -16,7 +16,7 @@ use Predis\Response\Status;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisAdapter implements RedisInterface
+class RedisAdapter
 {
     /**
      * current redis client in use
@@ -40,8 +40,14 @@ class RedisAdapter implements RedisInterface
      * @param type $scheme
      * @param int $db
      */
-    public function __construct(string $host = '127.0.0.1', int $port = 6379, ?string $pwd = null, string $scheme = 'tcp', int $db = 0, ?RedisClientInterface $client = null)
-    {
+    public function __construct(
+        string $host = RedisClientInterface::DEFAULTS['host'],
+        int $port = RedisClientInterface::DEFAULTS['port'],
+        ?string $pwd = null,
+        string $scheme = RedisClientInterface::DEFAULTS['scheme'],
+        int $db = RedisClientInterface::DEFAULTS['database'],
+        ?RedisClientInterface $client = null
+    ) {
         $this->context = [
             'host' => $host,
             'port' => $port,
@@ -137,6 +143,7 @@ class RedisAdapter implements RedisInterface
 
                 return ('PONG' === $ping->getPayload());
             }
+
             return $ping;
         }
     }
@@ -146,11 +153,11 @@ class RedisAdapter implements RedisInterface
      */
     public static function createRedisAdapter(array $conf): self
     {
-        $host = $conf['host'] ?? '127.0.0.1';
-        $port = $conf['port'] ?? 6379;
+        $host = $conf['host'] ?? RedisClientInterface::DEFAULTS['host'];
+        $port = $conf['port'] ?? RedisClientInterface::DEFAULTS['port'];
         $pwd = $conf['password'] ?? null;
-        $scheme = $conf['scheme'] ?? 'tcp';
-        $db = $conf['database'] ?? 0;
+        $scheme = $conf['scheme'] ?? RedisClientInterface::DEFAULTS['scheme'];
+        $db = $conf['database'] ?? RedisClientInterface::DEFAULTS['database'];
 
         return new self($host, $port, $pwd, $scheme, $db);
     }
@@ -159,9 +166,9 @@ class RedisAdapter implements RedisInterface
      * Check integrity between this adapter instance configuration context and
      * our stored singleton of redis client
      *
-     * (see <b>PredisClientsPool</b> @class)
+     * (see <b>RedisClientsPool</b> @class)
      *
-     * @todo refactor this with pop_helper (units) to add function helper here in adapter class
+     * @todo maybe refactor this with pop_helper (units) to add function helper here in adapter class
      * (to pop out client_list['db'])
      *
      * @return bool
@@ -182,7 +189,8 @@ class RedisAdapter implements RedisInterface
         // check if database is well synced from upon instance context and predis singleton
         if ($this->context['database'] !== intval($context['db'])) {
             try {
-                //dump('switch db from ' . $context['db'] .' to ' . $this->context['database']);
+                dump('switch db from ' . $context['db'] . ' to ' . $this->context['database']);
+
                 return $this->selectDatabase($this->context['database']);
             } catch (\Exception $e) {
                 $debug = '';
@@ -211,6 +219,9 @@ class RedisAdapter implements RedisInterface
 
     /**
      * check the client ID stored by remote Redis server
+     *
+     * @param mixed $mixed
+     * @return bool
      */
     private function checkRedisClientId($mixed): bool
     {
@@ -228,25 +239,25 @@ class RedisAdapter implements RedisInterface
     }
 
     /**
-     * Predis client getter
+     * Redis client getter
      *
-     * @return Client
+     * @return RedisClientInterface
      */
-    public function getRedis(): Client
+    public function getRedis(): RedisClientInterface
     {
-        return $this->predis;
+        return $this->client;
     }
 
 
     /**
      * PHPUnit DI setter
      *
-     * @param Client $client predis client
-     * @return PredisAdapter
+     * @param RedisClientInterface $client php-redis or predis client
+     * @return RedisAdapter
      */
-    public function setPredis(Client $client): self
+    public function setRedis(RedisClientInterface $client): self
     {
-        $this->predis = $client;
+        $this->client = $client;
 
         return $this;
     }
@@ -256,12 +267,14 @@ class RedisAdapter implements RedisInterface
      *
      * @return string
      */
-    public function getPredisClientID(): string
+    public function getThisClientID(): string
     {
-        return spl_object_hash($this->predis);
+        return spl_object_hash($this->client);
     }
 
     /**
+     * fetch remote Redis server managed id for the ongoing connection
+     * (and thus client used here).
      *
      * @return int
      * @throws ConnectionLostException
@@ -272,6 +285,6 @@ class RedisAdapter implements RedisInterface
             $this->throwCLEx();
         }
 
-        return intval($this->predis->client('id'));
+        return intval($this->client->client('id'));
     }
 }
