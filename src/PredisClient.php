@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLegaz\Redis;
 
 use Predis\Client;
@@ -8,19 +10,21 @@ use Predis\Client;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class PredisClient extends Client implements RedisClientInterface {
-
+class PredisClient extends Client implements RedisClientInterface
+{
     /**
      * @todo implement this
-     * 
+     *
      * @return bool
      */
-    public function isPersistent(): bool {
+    public function isPersistent(): bool
+    {
         return false;
     }
 
-    public function __toString(): string {
-        return "predis";
+    public function __toString(): string
+    {
+        return 'predis';
     }
 
 }

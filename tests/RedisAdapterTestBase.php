@@ -47,7 +47,14 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
             ->willReturn(new Status('PONG'))
         ;
         //$this->predisAdapter = (new SUT())->setPredis($this->client);
-        $this->predisAdapter = new SUT('127.0.0.1', 6379, null, 'tcp', 0, $this->client);
+        $this->predisAdapter = new SUT(
+            RedisClientInterface::DEFAULTS['host'],
+            RedisClientInterface::DEFAULTS['port'],
+            null,
+            RedisClientInterface::DEFAULTS['scheme'],
+            RedisClientInterface::DEFAULTS['database'],
+            $this->client
+        );
     }
 
     /**
