@@ -12,22 +12,13 @@ use Predis\Response\Status;
 /**
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class PredisAdapterTestBase extends \PHPUnit\Framework\TestCase
+class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 {
     /** @var PredisAdapter */
     protected $predisAdapter;
 
     /** @var Client */
     protected $client;
-
-    /** @var array */
-    protected const DEFAULTS = [
-        'host' => '127.0.0.1',
-        'port' => 6379,
-        'scheme' => 'tcp',
-        'database' => 0,
-        'persistent' => false,
-    ];
 
     public static function setUpBeforeClass(): void
     {
@@ -70,11 +61,11 @@ class PredisAdapterTestBase extends \PHPUnit\Framework\TestCase
 
     protected function assertDefaultContext()
     {
-        $this->assertEquals(self::DEFAULTS, $this->predisAdapter->getContext());
+        $this->assertEquals(RedisClientInterface::DEFAULTS, $this->predisAdapter->getContext());
     }
 
     protected function assertNotDefaultContext()
     {
-        $this->assertNotEquals(self::DEFAULTS, $this->predisAdapter->getContext());
+        $this->assertNotEquals(RedisClientInterface::DEFAULTS, $this->predisAdapter->getContext());
     }
 }
