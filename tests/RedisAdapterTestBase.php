@@ -14,8 +14,8 @@ use Predis\Response\Status;
  */
 class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 {
-    /** @var PredisAdapter */
-    protected $predisAdapter;
+    /** @var RedisAdapter */
+    protected $redisAdapter;
 
     /** @var Client */
     protected $client;
@@ -46,8 +46,8 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
             ->method('ping')
             ->willReturn(new Status('PONG'))
         ;
-        //$this->predisAdapter = (new SUT())->setPredis($this->client);
-        $this->predisAdapter = new SUT(
+        //$this->redisAdapter = (new SUT())->setPredis($this->client);
+        $this->redisAdapter = new SUT(
             RedisClientInterface::DEFAULTS['host'],
             RedisClientInterface::DEFAULTS['port'],
             null,
@@ -63,16 +63,16 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     protected function tearDown(): void
     {
         unset($this->client);
-        unset($this->predisAdapter);
+        unset($this->redisAdapter);
     }
 
     protected function assertDefaultContext()
     {
-        $this->assertEquals(RedisClientInterface::DEFAULTS, $this->predisAdapter->getContext());
+        $this->assertEquals(RedisClientInterface::DEFAULTS, $this->redisAdapter->getContext());
     }
 
     protected function assertNotDefaultContext()
     {
-        $this->assertNotEquals(RedisClientInterface::DEFAULTS, $this->predisAdapter->getContext());
+        $this->assertNotEquals(RedisClientInterface::DEFAULTS, $this->redisAdapter->getContext());
     }
 }

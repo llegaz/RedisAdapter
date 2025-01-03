@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Predis\Tests\Functional;
+namespace LLegaz\Redis\Tests\Functional;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
-use LLegaz\Redis\RedisClientsPool;
 use LLegaz\Redis\RedisAdapter as SUT;
 
 if (!defined('SKIP_FUNCTIONAL_TESTS')) {
@@ -19,7 +18,7 @@ if (!defined('SKIP_FUNCTIONAL_TESTS')) {
 class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 {
     /** @var RedisAdapter */
-    protected $predisAdapter;
+    protected $redisAdapter;
 
     /** @var array */
     protected const DEFAULTS = [
@@ -46,7 +45,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             // don't forget that tests are deleoppers' tools (and not only an approval seal)
             $this->markTestSkipped('FUNCTIONAL TESTS are skipped by default when executing Units tests only.');
         }
-        $this->predisAdapter = new SUT();
+        $this->redisAdapter = new SUT();
     }
 
     /**
@@ -54,7 +53,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      */
     protected function tearDown(): void
     {
-        unset($this->predisAdapter);
+        unset($this->redisAdapter);
     }
 
     /**
@@ -73,14 +72,14 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      */
     public function testRedisAdapterFunc()
     {
-        $this->assertTrue($this->predisAdapter->isConnected());
+        $this->assertTrue($this->redisAdapter->isConnected());
     }
 
     public function testPredisClientSwitchDBs()
     {
         for ($i = 0; $i < 16; $i++) {
-            $this->assertTrue($this->predisAdapter->selectDatabase($i));
-            $this->assertEquals($i, $this->pop_helper($this->predisAdapter)['db']);
+            $this->assertTrue($this->redisAdapter->selectDatabase($i));
+            $this->assertEquals($i, $this->pop_helper($this->redisAdapter)['db']);
         }
     }
 
@@ -106,9 +105,9 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($deux, $quatre);
         $this->assertEquals($trois, $quatre);
         // those may fail if local redis is used at the same time
-        $this->assertEquals(1, count($this->predisAdapter->clientList())); // 1conn
+        $this->assertEquals(1, count($this->redisAdapter->clientList())); // 1conn
         $this->assertEquals(1, count($test->clientList())); // 1conn
-        $this->assertEquals($this->predisAdapter->getPredisClientID(), $test->getPredisClientID()); // 1conn
+        $this->assertEquals($this->redisAdapter->getPredisClientID(), $test->getPredisClientID()); // 1conn
     }
 
     /**
@@ -120,8 +119,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $cfg['database'] = 3;
         $test = SUT::createRedisAdapter($cfg);
         $otherClientID = $test->getPredisClientID();
-        $this->assertEquals($this->predisAdapter->getPredisClientID(), $otherClientID);
-        $this->assertEquals(1, count($this->predisAdapter->clientList()));
+        $this->assertEquals($this->redisAdapter->getPredisClientID(), $otherClientID);
+        $this->assertEquals(1, count($this->redisAdapter->clientList()));
     }
 
     /**
@@ -130,7 +129,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      */
     public function testMultipleClientsInvokationConsistency()
     {
-        $un = $this->predisAdapter->getPredisClientID();
+        $un = $this->redisAdapter->getPredisClientID();
 
         $test = new SUT('127.0.0.1', 6375, 'RedisAuth1');
         $deux = $test->getPredisClientID();
@@ -164,7 +163,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             }
             $this->assertEquals(${"test$i"}->getPredisClientID(), $testAgain->getPredisClientID());
             $this->assertEquals(${"test$i"}->getRedisClientID(), $testAgain->getRedisClientID());
-            $this->assertNotEquals($this->predisAdapter->getRedisClientID(), $testAgain->getRedisClientID());
+            $this->assertNotEquals($this->redisAdapter->getRedisClientID(), $testAgain->getRedisClientID());
             $i--;
         }
     }
@@ -176,7 +175,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     {
         $cfg = self::DEFAULTS;
         $a = [];
-        $a[] = $this->predisAdapter;
+        $a[] = $this->redisAdapter;
         $cfg['port'] = 6375;
         $cfg['password'] = 'RedisAuth1';
         $a[] = SUT::createRedisAdapter($cfg);
@@ -221,7 +220,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
                 // here real predis client are sync (singletons)
                 $this->assertEquals($this->pop_helper($final[$id])['db'], $this->pop_helper($pa)['db']);
 
-                // but predisAdapter instances' contexts are not
+                // but redisAdapter instances' contexts are not
                 $this->assertNotEquals(($final[$id])->getContext(), $pa->getContext());
 
                 /**
