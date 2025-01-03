@@ -12,7 +12,6 @@ interface RedisClientInterface
 {
     final public const PREDIS = 'predis';
     final public const PHP_REDIS = 'php-redis';
-
     final public const DEFAULTS = [
         'host' => '127.0.0.1',
         'port' => 6379,

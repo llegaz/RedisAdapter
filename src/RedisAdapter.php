@@ -6,7 +6,6 @@ namespace LLegaz\Redis;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LogicException;
-use Predis\Client;
 use Predis\Response\Status;
 
 /**
@@ -186,7 +185,7 @@ class RedisAdapter
 
             throw new LogicException('we\'ve got a problem here');
         }
-        // check if database is well synced from upon instance context and corresponfing redis client singleton
+        // check if database is well synced from upon instance context and corresponding redis client singleton
         if ($this->context['database'] !== intval($context['db'])) {
             try {
                 dump('switch db from ' . $context['db'] . ' to ' . $this->context['database']);
