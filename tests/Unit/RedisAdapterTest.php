@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Predis\Tests\Unit;
+namespace LLegaz\Redis\Tests\Unit;
 
 use LLegaz\Predis\Exception\ConnectionLostException;
 use Predis\Response\Status;
@@ -10,7 +10,7 @@ use Predis\Response\Status;
 /**
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
+class PredisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
     /**
      * @inheritdoc
@@ -39,7 +39,7 @@ class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
                 ->method('ping')
                 ->willReturn(new Status('PONG'))
         ;
-        $this->assertTrue($this->predisAdapter->isConnected());
+        $this->assertTrue($this->redisAdapter->isConnected());
         $this->assertDefaultContext();
     }
 
@@ -49,7 +49,7 @@ class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
                 ->method('select')
                 ->willReturn(new Status('OK'))
         ;
-        $this->assertTrue($this->predisAdapter->selectDatabase(42));
+        $this->assertTrue($this->redisAdapter->selectDatabase(42));
         $this->assertNotDefaultContext();
     }
 
@@ -60,7 +60,7 @@ class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
             ->with('list')
             ->willReturn([])
         ;
-        $this->assertTrue(is_array($this->predisAdapter->clientList()));
+        $this->assertTrue(is_array($this->redisAdapter->clientList()));
         $this->assertDefaultContext();
     }
 
@@ -74,7 +74,7 @@ class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
             ->willThrowException(new ConnectionLostException())
         ;
         $this->expectException(ConnectionLostException::class);
-        $this->predisAdapter->selectDatabase(42);
+        $this->redisAdapter->selectDatabase(42);
     }
 
     /**
@@ -83,7 +83,7 @@ class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
     public function testSelectDBLogicException()
     {
         $this->expectException(\LogicException::class);
-        $this->predisAdapter->selectDatabase(-42);
+        $this->redisAdapter->selectDatabase(-42);
     }
 
     /**
@@ -97,6 +97,6 @@ class PredisAdapterTest extends \LLegaz\Predis\Tests\PredisAdapterTestBase
             ->willThrowException(new ConnectionLostException())
         ;
         $this->expectException(ConnectionLostException::class);
-        $this->predisAdapter->clientList();
+        $this->redisAdapter->clientList();
     }
 }

@@ -21,6 +21,10 @@ class RedisClientsPool
      * @var map
      */
     private static $clients = [];
+    /**
+     * @todo handle phpredis timeouts (polling and retry ?)
+     */
+    private const TIMEOUT = 3;
 
     public function __destruct()
     {
@@ -35,7 +39,8 @@ class RedisClientsPool
     }
 
     /**
-     * Multiple clients handler
+     * Multiple clients handler -
+     * it returns and manage singletons (predis or phpredis client) for each for a client/server pair
      *
      * @param array $conf
      * @return RedisClientInterface
@@ -56,7 +61,35 @@ class RedisClientsPool
                     $conf['persistent'] = count(self::$clients) + 1;
                     $conf['persistent'] = (string) $conf['persistent'];
                 }
-                $redis = new Client($conf);
+                print_r(get_loaded_extensions());
+
+                
+                /**
+                 * 
+                 * 
+                $redis = new Redis();
+                $con = '';
+                if (isset($conf['scheme']) && strlen($conf['scheme'])) {
+                    $con .= $conf['scheme'];
+                    $con .= '://';
+                }
+                if (!isset($conf['host']) || !strlen($conf['host']) || !isset($conf['port']) || $conf['port'] < 0) {
+                    throw new LogicException('Host and port should be set properly');
+                }
+                $con .= $conf['host'];
+                if (isset($conf['persistent']) && $conf['persistent']) {
+                    $conf['persistent'] = count(self::$clients) + 1;
+                    $conf['persistent'] = (string) $conf['persistent'];
+                    $redis->pconnect($con, $conf['port'], self::TIMEOUT, $conf['persistent']);
+                } else {
+                    $redis->connect($con, $conf['port'], self::TIMEOUT);
+                }
+                if (isset($conf['password'])) {
+                    $redis->auth($conf['password']);
+                }
+                 * 
+                 */
+                $redis = new PredisClient($conf);
                 // delayed connection
                 //$redis->connect();
                 self::$clients[$md5] = $redis;

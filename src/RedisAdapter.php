@@ -179,14 +179,14 @@ class RedisAdapter
     {
         $context = $this->clientList();
         while (!isset($context['id']) || !$this->checkRedisClientId($context['id'])) {
-            // we manage singletons of predis clients but they can have concurrent access to the same server
+            // we manage singletons of redis clients but they can have concurrent access to the same server
             $context = array_pop($context);
         }
         if (!$this->checkRedisClientId($context['id']) || !isset($context['db'])) {
 
             throw new LogicException('we\'ve got a problem here');
         }
-        // check if database is well synced from upon instance context and predis singleton
+        // check if database is well synced from upon instance context and corresponfing redis client singleton
         if ($this->context['database'] !== intval($context['db'])) {
             try {
                 dump('switch db from ' . $context['db'] . ' to ' . $this->context['database']);
