@@ -46,7 +46,7 @@ class RedisClientsPool
      * @return RedisClientInterface
      * @throws ConnectionLostException
      */
-    public static function getClient(array $conf): Client
+    public static function getClient(array $conf): RedisClientInterface
     {
         $arrKey = $conf;
         unset($arrKey['database']);
@@ -61,12 +61,12 @@ class RedisClientsPool
                     $conf['persistent'] = count(self::$clients) + 1;
                     $conf['persistent'] = (string) $conf['persistent'];
                 }
-                print_r(get_loaded_extensions());
+                //print_r(get_loaded_extensions());
 
-                
+
                 /**
-                 * 
-                 * 
+                 *
+                 *
                 $redis = new Redis();
                 $con = '';
                 if (isset($conf['scheme']) && strlen($conf['scheme'])) {
@@ -87,7 +87,7 @@ class RedisClientsPool
                 if (isset($conf['password'])) {
                     $redis->auth($conf['password']);
                 }
-                 * 
+                 *
                  */
                 $redis = new PredisClient($conf);
                 // delayed connection

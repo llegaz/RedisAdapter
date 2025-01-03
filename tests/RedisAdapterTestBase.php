@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LLegaz\Redis\Tests;
 
 use LLegaz\Redis\RedisAdapter as SUT;
-use Predis\Client;
 use LLegaz\Redis\RedisClientInterface;
+use LLegaz\Redis\PredisClient;
 use Predis\Response\Status;
 
 /**
@@ -17,7 +17,7 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     /** @var RedisAdapter */
     protected $redisAdapter;
 
-    /** @var Client */
+    /** @var RedisClientInterface */
     protected $client;
 
     public static function setUpBeforeClass(): void
@@ -30,7 +30,8 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
-        $this->client = $this->getMockBuilder(Client::class)
+        //$this->client = $this->getMockBuilder(RedisClientInterface::class)
+        $this->client = $this->getMockBuilder(PredisClient::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['disconnect', 'executeCommand'])
             ->addMethods(['ping', 'select' , 'client'])

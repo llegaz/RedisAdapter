@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis\Tests\Unit;
 
-use LLegaz\Predis\Exception\ConnectionLostException;
+use LLegaz\Redis\Exception\ConnectionLostException;
 use Predis\Response\Status;
 
 /**
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class PredisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
+class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
     /**
      * @inheritdoc

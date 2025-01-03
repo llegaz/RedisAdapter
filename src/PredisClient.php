@@ -12,6 +12,7 @@ use Predis\Client;
  */
 class PredisClient extends Client implements RedisClientInterface
 {
+
     /**
      * @todo implement this
      *
