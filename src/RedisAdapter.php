@@ -134,7 +134,7 @@ class RedisAdapter
         try {
             // simulate predis delayed connection
             if (!$this->client->isConnected()) {
-                $this->client->connect();
+                $this->client->launchConnection();
             }
             $ping = $this->client->ping();
         } catch (\Exception $e) {
@@ -145,7 +145,6 @@ class RedisAdapter
             $this->lastErrorMsg = $e->getMessage() . $debug . PHP_EOL;
         } finally {
             if ($ping instanceof Status) {
-
                 return ('PONG' === $ping->getPayload());
             }
 
@@ -217,9 +216,7 @@ class RedisAdapter
      */
     private function throwCLEx(): void
     {
-        if ($this->lastErrorMsg && strlen($this->lastErrorMsg)) {
-            throw new ConnectionLostException($this->lastErrorMsg);
-        }
+        throw new ConnectionLostException($this->lastErrorMsg ?? '');
     }
 
     /**

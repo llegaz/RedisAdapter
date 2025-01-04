@@ -13,6 +13,7 @@ if (!defined('SKIP_FUNCTIONAL_TESTS')) {
 }
 
 /**
+ * @todo refacto tests
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */

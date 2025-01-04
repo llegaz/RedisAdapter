@@ -23,7 +23,6 @@ interface RedisClientInterface
 
     final public const TIMEOUT = 3; // 3s
 
-    public function connect()/*: void*/;
     public function disconnect()/*: void*/;
     public function isConnected(): bool;
 

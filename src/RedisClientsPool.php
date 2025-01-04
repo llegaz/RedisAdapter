@@ -55,36 +55,23 @@ class RedisClientsPool
             // get the client back
             $redis = self::$clients[$md5];
         } else {
-            try {
-                self::$clients[$md5] = [];
+            self::$clients[$md5] = [];
 
-                if (isset($conf['persistent']) && $conf['persistent']) {
-                    $conf['persistent'] = count(self::$clients) + 1;
-                    $conf['persistent'] = (string) $conf['persistent'];
-                }
-                //print_r(get_loaded_extensions());
-                if (in_array('redis', get_loaded_extensions())) {
-                    include 'RedisClient.php';
-                    $redis = new RedisClient($conf);
-                } else {
-                    $redis = new PredisClient($conf);
-                }
-
-                // delayed connection
-                //$redis->connect();
-                self::$clients[$md5] = $redis;
-            } catch (\Exception $e) {
-                /**
-                 * @todo refacto here if connections are delayed maybe try /catch block isn't needed anymore
-                 * see RedisAdapter::isConnected for connect
-                 */
-                $debug = '';
-                if (defined('LLEGAZ_DEBUG')) {
-                    $debug = PHP_EOL . $e->getTraceAsString();
-                }
-
-                throw new ConnectionLostException('Connection to redis server is lost or not responding' . $debug . PHP_EOL, 500, $e);
+            if (isset($conf['persistent']) && $conf['persistent']) {
+                $conf['persistent'] = count(self::$clients) + 1;
+                $conf['persistent'] = (string) $conf['persistent'];
             }
+
+            if (in_array('redis', get_loaded_extensions())) {
+                include_once 'RedisClient.php';
+                $redis = new RedisClient($conf);
+            } else {
+                $redis = new PredisClient($conf);
+            }
+
+            // delayed connection
+            //$redis->connect();
+            self::$clients[$md5] = $redis;
         }
 
         if ($redis instanceof RedisClientInterface) {

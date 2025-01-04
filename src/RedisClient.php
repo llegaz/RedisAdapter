@@ -20,7 +20,7 @@ class RedisClient extends \Redis implements RedisClientInterface
 
     public function __construct(array $conf)
     {
-        if (strlen($conf['persistent'])) {
+        if (isset($conf['persistent']) && $conf['persistent'] && strlen($conf['persistent'])) {
             $this->isPersistent = true;
             $this->persistent = $conf['persistent'];
         }
@@ -44,7 +44,7 @@ class RedisClient extends \Redis implements RedisClientInterface
         $this->close();
     }
 
-    public function connect(string $host, int $port = 6379, float $timeout = 0, string $persistent_id = null, int $retry_interval = 0/*, float $read_timeout = 0, array $context = null*/)/*: bool*/
+    public function launchConnection(): void
     {
         if ($this->isPersistent) {
             $this->isConnected = parent::pconnect($this->con, $this->port, self::TIMEOUT, $this->persistent);
