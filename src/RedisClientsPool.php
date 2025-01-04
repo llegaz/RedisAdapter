@@ -57,43 +57,27 @@ class RedisClientsPool
         } else {
             try {
                 self::$clients[$md5] = [];
+
                 if (isset($conf['persistent']) && $conf['persistent']) {
                     $conf['persistent'] = count(self::$clients) + 1;
                     $conf['persistent'] = (string) $conf['persistent'];
                 }
                 //print_r(get_loaded_extensions());
-
-
-                /**
-                 *
-                 *
-                $redis = new Redis();
-                $con = '';
-                if (isset($conf['scheme']) && strlen($conf['scheme'])) {
-                    $con .= $conf['scheme'];
-                    $con .= '://';
-                }
-                if (!isset($conf['host']) || !strlen($conf['host']) || !isset($conf['port']) || $conf['port'] < 0) {
-                    throw new LogicException('Host and port should be set properly');
-                }
-                $con .= $conf['host'];
-                if (isset($conf['persistent']) && $conf['persistent']) {
-                    $conf['persistent'] = count(self::$clients) + 1;
-                    $conf['persistent'] = (string) $conf['persistent'];
-                    $redis->pconnect($con, $conf['port'], self::TIMEOUT, $conf['persistent']);
+                if (in_array('redis', get_loaded_extensions())) {
+                    include 'RedisClient.php';
+                    $redis = new RedisClient($conf);
                 } else {
-                    $redis->connect($con, $conf['port'], self::TIMEOUT);
+                    $redis = new PredisClient($conf);
                 }
-                if (isset($conf['password'])) {
-                    $redis->auth($conf['password']);
-                }
-                 *
-                 */
-                $redis = new PredisClient($conf);
+
                 // delayed connection
                 //$redis->connect();
                 self::$clients[$md5] = $redis;
             } catch (\Exception $e) {
+                /**
+                 * @todo refacto here if connections are delayed maybe try /catch block isn't needed anymore
+                 * see RedisAdapter::isConnected for connect
+                 */
                 $debug = '';
                 if (defined('LLEGAZ_DEBUG')) {
                     $debug = PHP_EOL . $e->getTraceAsString();

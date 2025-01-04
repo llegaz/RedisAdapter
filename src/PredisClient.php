@@ -12,6 +12,15 @@ use Predis\Client;
  */
 class PredisClient extends Client implements RedisClientInterface
 {
+    /**
+     * lil hack for the RedisAdapter isConnected method
+     *
+     * @return bool
+     */
+    public function isConnected(): bool
+    {
+        return true;
+    }
 
     /**
      * @todo implement this

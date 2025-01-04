@@ -9,9 +9,11 @@ use LogicException;
 use Predis\Response\Status;
 
 /**
- * This class isn't really an adapter but it settles base for other projects based on it
+ * This class isn't really an adapter, it is a <b>GATEWAY</b> (see Martin Fowler - Gateway Design Pattern).
+ * The goal here is to adapt use of either Predis client or native PHP Redis client in a transparently way.
  *
- * @todo refactor this (rename adapter to base maybe ? or Wrapper ?)
+ * This class settles base for other projects based on it (PSR-6 Cache and so on)
+ *
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -130,6 +132,10 @@ class RedisAdapter
         $ping = false;
 
         try {
+            // simulate predis delayed connection
+            if (!$this->client->isConnected()) {
+                $this->client->connect();
+            }
             $ping = $this->client->ping();
         } catch (\Exception $e) {
             $debug = '';

@@ -76,7 +76,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($this->redisAdapter->isConnected());
     }
 
-    public function testPredisClientSwitchDBs()
+    public function testRedisClientSwitchDBs()
     {
         for ($i = 0; $i < 16; $i++) {
             $this->assertTrue($this->redisAdapter->selectDatabase($i));
@@ -85,7 +85,25 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * in fact this test <b>RedisClientsPool</b>
+     * @todo refacto this shit use both  getRedisClientID and getThisClientID
+     * maybe rename getThisClientID to getLocalRedisClientID  or getClientHash or getClientIntegrityID
+     *          and getRedisClientID to getRemoteRedisClientID
+     * the same client SHOULD BE used when trying to instantiate another adapter to address another database
+     */
+    public function testClientInvokationConstistency()
+    {
+        $cfg = self::DEFAULTS;
+        $cfg['database'] = 3;
+        $test = SUT::createRedisAdapter($cfg);
+        $otherClientID = $test->getThisClientID();
+        $this->assertEquals($this->redisAdapter->getThisClientID(), $otherClientID);
+        $this->assertEquals(1, count($this->redisAdapter->clientList()));
+        $otherClientID = $test->getRedisClientID();
+        $this->assertEquals($this->redisAdapter->getRedisClientID(), $otherClientID);
+    }
+
+    /**
+     * in fact those tests (previous too) are testing <b>RedisClientsPool</b> class
      */
     public function testSingleClientInvokationConsistency()
     {
@@ -109,19 +127,6 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(1, count($this->redisAdapter->clientList())); // 1conn
         $this->assertEquals(1, count($test->clientList())); // 1conn
         $this->assertEquals($this->redisAdapter->getThisClientID(), $test->getThisClientID()); // 1conn
-    }
-
-    /**
-     * the same predis client is used when trying to instantiate another adapter to address another database
-     */
-    public function testPredisSingleClientInvokationConstistency()
-    {
-        $cfg = self::DEFAULTS;
-        $cfg['database'] = 3;
-        $test = SUT::createRedisAdapter($cfg);
-        $otherClientID = $test->getThisClientID();
-        $this->assertEquals($this->redisAdapter->getThisClientID(), $otherClientID);
-        $this->assertEquals(1, count($this->redisAdapter->clientList()));
     }
 
     /**
