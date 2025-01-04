@@ -20,13 +20,23 @@ class RedisClientsPool
      *
      * @var map
      */
-    private static $clients = [];
+    private static array $clients = [];
     /**
      * @todo handle phpredis timeouts (polling and retry ?)
      */
     private const TIMEOUT = 3;
+    private static bool $isRedis;
+    private static bool $init = false;
 
-    public function __destruct()
+    public static function init()
+    {
+        if (!self::$init) {
+            register_shutdown_function('self::destruct');
+            self::$isRedis = in_array('redis', get_loaded_extensions());
+        }
+    }
+
+    public static function destruct()
     {
         foreach (self::$clients as $client) {
             if ($client instanceof RedisClientInterface) {
@@ -62,7 +72,7 @@ class RedisClientsPool
                 $conf['persistent'] = (string) $conf['persistent'];
             }
 
-            if (in_array('redis', get_loaded_extensions())) {
+            if (self::$isRedis) {
                 include_once 'RedisClient.php';
                 $redis = new RedisClient($conf);
             } else {
