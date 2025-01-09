@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LLegaz\Redis\Tests;
 
 use LLegaz\Redis\PredisClient;
-//use LLegaz\Redis\RedisClient;
 use LLegaz\Redis\RedisAdapter as SUT;
+use LLegaz\Redis\RedisClient;
 use LLegaz\Redis\RedisClientInterface;
 use Predis\Response\Status;
 
@@ -19,7 +19,10 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     protected $redisAdapter;
 
     /** @var RedisClientInterface */
-    protected $client;
+    protected $predisClient;
+
+    /** @var RedisClientInterface */
+    protected $redisClient;
 
     public static function setUpBeforeClass(): void
     {
@@ -31,33 +34,49 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
-        //$this->client = $this->getMockBuilder(RedisClientInterface::class)
-        $this->client = $this->getMockBuilder(PredisClient::class)
-        //$this->client = $this->getMockBuilder(RedisClient::class)
+        $this->predisClient = $this->getMockBuilder(PredisClient::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['disconnect', 'executeCommand'])
             ->addMethods(['ping', 'select' , 'client'])
             ->getMock()
         ;
-        $this->client
+        $this->redisClient = $this->getMockBuilder(RedisClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['disconnect', 'ping', 'select' , 'client', 'launchConnection'/*, 'isConnected'*/])
+            ->getMock()
+        ;
+        $this->predisClient
             ->expects($this->any())
             ->method('disconnect')
             ->willReturnSelf()
         ;
-        $this->client
+        $this->predisClient
             ->expects($this->any())
             ->method('ping')
             ->willReturn(new Status('PONG'))
         ;
-        //$this->redisAdapter = (new SUT())->setPredis($this->client);
+        $this->redisClient
+            ->expects($this->any())
+            ->method('disconnect')
+            ->willReturnSelf()
+        ;
+        $this->redisClient
+            ->expects($this->any())
+            ->method('ping')
+            ->willReturn(true)
+        ;
+        /**
+         * start using predis client mock on SUT
+         */
         $this->redisAdapter = new SUT(
             RedisClientInterface::DEFAULTS['host'],
             RedisClientInterface::DEFAULTS['port'],
             null,
             RedisClientInterface::DEFAULTS['scheme'],
             RedisClientInterface::DEFAULTS['database'],
-            $this->client
+            $this->predisClient
         );
+        //$this->redisAdapter = (new SUT())->setPredis($this->client);
     }
 
     /**

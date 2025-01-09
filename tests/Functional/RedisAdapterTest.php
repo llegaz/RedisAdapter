@@ -86,9 +86,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @todo refacto this shit use both  getRedisClientID and getThisClientID
-     * maybe rename getThisClientID to getLocalRedisClientID  or getClientHash or getClientIntegrityID
-     *          and getRedisClientID to getRemoteRedisClientID
+     * @todo refacto this shit use both  getRedisClientID and getID
      * the same client SHOULD BE used when trying to instantiate another adapter to address another database
      */
     public function testClientInvokationConstistency()
@@ -96,8 +94,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $cfg = self::DEFAULTS;
         $cfg['database'] = 3;
         $test = SUT::createRedisAdapter($cfg);
-        $otherClientID = $test->getThisClientID();
-        $this->assertEquals($this->redisAdapter->getThisClientID(), $otherClientID);
+        $otherClientID = $test->getID();
+        $this->assertEquals($this->redisAdapter->getID(), $otherClientID);
         $this->assertEquals(1, count($this->redisAdapter->clientList()));
         $otherClientID = $test->getRedisClientID();
         $this->assertEquals($this->redisAdapter->getRedisClientID(), $otherClientID);
@@ -110,14 +108,14 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     {
         $cfg = self::DEFAULTS;
         $cfg['database'] = 3;
-        $un = SUT::createRedisAdapter($cfg)->getThisClientID();
-        $deux = SUT::createRedisAdapter($cfg)->getThisClientID();
+        $un = SUT::createRedisAdapter($cfg)->getID();
+        $deux = SUT::createRedisAdapter($cfg)->getID();
         $cfg['database'] = 4;
         $test = SUT::createRedisAdapter($cfg);
-        $trois = $test->getThisClientID();
+        $trois = $test->getID();
         $cfg['database'] = 3;
         $test = SUT::createRedisAdapter($cfg);
-        $quatre = $test->getThisClientID();
+        $quatre = $test->getID();
         $this->assertEquals($un, $deux);
         $this->assertEquals($un, $trois);
         $this->assertEquals($un, $quatre);
@@ -127,7 +125,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         // those may fail if local redis is used at the same time
         $this->assertEquals(1, count($this->redisAdapter->clientList())); // 1conn
         $this->assertEquals(1, count($test->clientList())); // 1conn
-        $this->assertEquals($this->redisAdapter->getThisClientID(), $test->getThisClientID()); // 1conn
+        $this->assertEquals($this->redisAdapter->getID(), $test->getID()); // 1conn
     }
 
     /**
@@ -136,16 +134,16 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      */
     public function testMultipleClientsInvokationConsistency()
     {
-        $un = $this->redisAdapter->getThisClientID();
+        $un = $this->redisAdapter->getID();
 
         $test = new SUT('127.0.0.1', 6375, 'RedisAuth1');
-        $deux = $test->getThisClientID();
+        $deux = $test->getID();
 
         $test2 = new SUT('127.0.0.1', 6376, 'RedisAuth2');
-        $trois = $test2->getThisClientID();
+        $trois = $test2->getID();
 
         $test3 = new SUT('127.0.0.1', 6377, 'RedisAuth3');
-        $quatre = $test3->getThisClientID();
+        $quatre = $test3->getID();
 
         $this->assertTrue($test->isConnected());
         $this->assertTrue($test2->isConnected());
@@ -168,7 +166,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             if ($i === 1) {
                 $i = '';
             }
-            $this->assertEquals(${"test$i"}->getThisClientID(), $testAgain->getThisClientID());
+            $this->assertEquals(${"test$i"}->getID(), $testAgain->getID());
             $this->assertEquals(${"test$i"}->getRedisClientID(), $testAgain->getRedisClientID());
             $this->assertNotEquals($this->redisAdapter->getRedisClientID(), $testAgain->getRedisClientID());
             $i--;
@@ -220,7 +218,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
         $final = [];
         foreach ($a as $pa) {
-            $id = $pa->getThisClientID();
+            $id = $pa->getID();
 
             // same referenced clients SHOULD have the same final state
             if (isset($final[$id])) {
@@ -289,12 +287,5 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testClientAfterUnreachableException(?SUT $test)
     {
         $this->assertNull($test);
-    }
-
-    private function pop_helper(SUT $pa)
-    {
-        $client_list = $pa->clientList();
-
-        return array_pop($client_list);
     }
 }
