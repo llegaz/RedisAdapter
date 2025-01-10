@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis;
 
+use Exception;
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\LocalIntegrityException;
 use LLegaz\Redis\Exception\UnexpectedException;
@@ -45,6 +46,8 @@ class RedisAdapter
 
     /**
      *
+     * @todo add a logger interface to the class, see to format/log exceptions externally of this class
+     *
      * @param string $host
      * @param int $port
      * @param string|null $pwd
@@ -79,6 +82,7 @@ class RedisAdapter
         if ($client instanceof RedisClientInterface) {
             // for the sake of units
             $this->client = $client;
+            $this->context['client_id'] = 1337;
         } else {
             RedisClientsPool::init();
             $this->client = RedisClientsPool::getClient($this->context);
@@ -117,7 +121,6 @@ class RedisAdapter
             throw new LogicException('Databases are identified with unsigned integer');
         }
         if (!$this->isConnected()) {
-            dump('selectDatabase excp on conn');
             $this->throwCLEx();
         }
         $this->context['database'] = $db;
@@ -125,12 +128,15 @@ class RedisAdapter
         try {
             $redisResponse = $this->client->select($db);
         } catch (Exception $e) {
-            $redisResponse = false;
+            $redisResponse = null;
             $this->formatException($e);
-            dump('selectDatabase excp on slect');
-            $this->throwUEx();
         } finally {
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : ($redisResponse === true);
+            if (is_null($redisResponse)) {
+                $this->throwUEx();
+            } else {
+
+                return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : ($redisResponse === true);
+            }
         }
     }
 
@@ -143,14 +149,12 @@ class RedisAdapter
     public function clientList(): array
     {
         if (!$this->isConnected()) {
-            dump('clientList excp on conn');
             $this->throwCLEx();
         }
 
         try {
             $list = $this->client->client('list');
         } catch (Exception $e) {
-            dump('clientList excp on list');
             $this->formatException($e);
             $this->throwUEx();
         }
@@ -226,7 +230,7 @@ class RedisAdapter
 
     /**
      * return client context stored "remotely" on redis server
-     * 
+     *
      * @return array
      * @throws LogicException
      */
@@ -282,7 +286,7 @@ class RedisAdapter
     }
 
     /**
-     * 
+     *
      * @param \Throwable $t
      */
     private function formatException(\Throwable $t): void

@@ -24,6 +24,8 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     /** @var RedisClientInterface */
     protected $redisClient;
 
+    private array $defaults = [];
+
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
@@ -34,6 +36,7 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
+        $this->defaults = array_merge(RedisClientInterface::DEFAULTS, ['client_id' => '1337']);
         $this->predisClient = $this->getMockBuilder(PredisClient::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['disconnect', 'executeCommand'])
@@ -42,7 +45,7 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
         ;
         $this->redisClient = $this->getMockBuilder(RedisClient::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['disconnect', 'ping', 'select' , 'client', 'launchConnection'/*, 'isConnected'*/])
+            ->onlyMethods(['disconnect', 'ping', 'select' , 'client', 'launchConnection'])
             ->getMock()
         ;
         $this->predisClient
@@ -90,11 +93,11 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 
     protected function assertDefaultContext()
     {
-        $this->assertEquals(RedisClientInterface::DEFAULTS, $this->redisAdapter->getContext());
+        $this->assertEquals($this->defaults, $this->redisAdapter->getContext());
     }
 
     protected function assertNotDefaultContext()
     {
-        $this->assertNotEquals(RedisClientInterface::DEFAULTS, $this->redisAdapter->getContext());
+        $this->assertNotEquals($this->defaults, $this->redisAdapter->getContext());
     }
 }

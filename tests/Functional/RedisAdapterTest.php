@@ -81,7 +81,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     {
         for ($i = 0; $i < 16; $i++) {
             $this->assertTrue($this->redisAdapter->selectDatabase($i));
-            $this->assertEquals($i, $this->pop_helper($this->redisAdapter)['db']);
+            $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
         }
     }
 
@@ -196,7 +196,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
                 $this->assertTrue($pa->selectDatabase($i));
                 // make sure we have 1 client per client/server pair
                 $this->assertEquals(1, count($pa->clientList()));
-                $this->assertEquals($i, $this->pop_helper($pa)['db']);
+                $this->assertEquals($i, $pa->getClientCtxtFromRemote()['db']);
             }
         }
         // 4 clients (pairing with 4 servers)
@@ -223,7 +223,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             // same referenced clients SHOULD have the same final state
             if (isset($final[$id])) {
                 // here real predis client are sync (singletons)
-                $this->assertEquals($this->pop_helper($final[$id])['db'], $this->pop_helper($pa)['db']);
+                $this->checkRemote($final[$id], $pa);
 
                 // but redisAdapter instances' contexts are not
                 $this->assertNotEquals(($final[$id])->getContext(), $pa->getContext());
@@ -232,18 +232,18 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
                  * j'avoue là on se tire les cheveux.. intégrité quand tu nous tiens
                  */
                 $this->assertTrue(($final[$id])->checkIntegrity());
-                $this->assertEquals(($final[$id])->getContext()['database'], $this->pop_helper($final[$id])['db']);
-                // all starting connections were made on db0 (default) and they theorically should be the first elements in final array
+                $this->checkLocal($final[$id]);
+                // all starting connections were made on db0 (default) and they theorically should be the first elements in final array (this works only fro predis)
 
                 $this->assertTrue($pa->checkIntegrity());
-                $this->assertEquals($pa->getContext()['database'], $this->pop_helper($pa)['db']);
+                $this->checkLocal($pa);
 
                 // all starting connections were made on db0 (default)
                 $this->assertEquals(0, ($final[$id])->getRedis()->getConnection()->getParameters()->toArray()['database']);
                 $this->assertEquals(0, $pa->getRedis()->getConnection()->getParameters()->toArray()['database']);
                 // second batch of connections reusing singletons were not made on db0 (original contexts are overwritten by new instances)
-                $this->assertNotEquals(0, $this->pop_helper($final[$id])['db']);
-                $this->assertNotEquals(0, $this->pop_helper($pa)['db']);
+                $this->assertNotEquals(0, ($final[$id])->getClientCtxtFromRemote()['db']);
+                $this->assertNotEquals(0, $pa->getClientCtxtFromRemote()['db']);
                 // singletons
                 $this->assertEquals($pa->getRedisClientID(), ($final[$id])->getRedisClientID());
             } else {
@@ -287,5 +287,23 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testClientAfterUnreachableException(?SUT $test)
     {
         $this->assertNull($test);
+    }
+
+    private function checkRemote(SUT $a, SUT $b): void
+    {
+        $remoteA = $a->getClientCtxtFromRemote()['db'];
+        $remoteB = $b->getClientCtxtFromRemote()['db'];
+        $this->assertIsInt($remoteA);
+        $this->assertIsInt($remoteB);
+        $this->assertEquals($remoteA, $remoteB);
+    }
+
+    private function checkLocal(SUT $a): void
+    {
+        $local = $a->getContext()['database'];
+        $remote = $a->getClientCtxtFromRemote()['db'];
+        $this->assertIsInt($local);
+        $this->assertIsInt($remote);
+        $this->assertEquals($local, $remote);
     }
 }

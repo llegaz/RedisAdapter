@@ -6,15 +6,14 @@ namespace LLegaz\Redis\Tests\Unit;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\UnexpectedException;
-use Predis\Response\Status;
 
 /**
- * Units using predis client
+ * RC = Redis client instead of predis
  *
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
+class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
     /**
      * @inheritdoc
@@ -22,6 +21,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->redisAdapter->setRedis($this->redisClient);
         $this->assertDefaultContext();
     }
     /**
@@ -39,31 +39,34 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 
     public function testIsConnected()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
                 ->method('ping')
-                ->willReturn(new Status('PONG'))
+                ->willReturn(true)
         ;
+
         $this->assertTrue($this->redisAdapter->isConnected());
         $this->assertDefaultContext();
     }
 
     public function testSelectDB()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
                 ->method('select')
-                ->willReturn(new Status('OK'))
+                ->willReturn(true)
         ;
+
         $this->assertTrue($this->redisAdapter->selectDatabase(42));
         $this->assertNotDefaultContext();
     }
 
     public function testClientList()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willReturn([])
         ;
+
         $this->assertTrue(is_array($this->redisAdapter->clientList()));
         $this->assertDefaultContext();
     }
@@ -73,10 +76,11 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
      */
     public function testSelectDBException()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('ping')
             ->willThrowException(new \Exception())
         ;
+
         $this->expectException(ConnectionLostException::class);
         $this->redisAdapter->selectDatabase(42);
     }
@@ -86,10 +90,11 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
      */
     public function testSelectDBUnexpectedException()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('select')
             ->willThrowException(new \Exception())
         ;
+
         $this->expectException(UnexpectedException::class);
         $this->redisAdapter->selectDatabase(42);
     }
@@ -108,10 +113,11 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
      */
     public function testClientListException()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('ping')
             ->willThrowException(new \Exception())
         ;
+
         $this->expectException(ConnectionLostException::class);
         $this->redisAdapter->clientList();
     }
@@ -121,11 +127,12 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
      */
     public function testClientListUnexpectedException()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willThrowException(new \Exception())
         ;
+
         $this->expectException(UnexpectedException::class);
         $this->redisAdapter->clientList();
     }
@@ -134,7 +141,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $a = [];
         $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 0]));
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willReturn($a)
@@ -147,12 +154,12 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $a = [];
         $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 10]));
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
                 ->method('select')
-                ->willReturn(new Status('OK'))
+                ->willReturn(true)
         ;
         $this->assertTrue($this->redisAdapter->selectDatabase(10));
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willReturn($a)
@@ -164,9 +171,9 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     /**
      * yes we could throw an exception from the later select too but it seems superfluous
      */
-    public function testCheckIntegrityException()
+    public function testCheckIntegrityFail()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willThrowException(new \Exception())
