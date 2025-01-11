@@ -6,6 +6,9 @@ namespace LLegaz\Redis\Tests\Unit;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\UnexpectedException;
+use LLegaz\Redis\RedisAdapter as SUT;
+use LLegaz\Redis\RedisClient;
+use LLegaz\Redis\RedisClientInterface;
 
 /**
  * RC = Redis client instead of predis
@@ -15,13 +18,44 @@ use LLegaz\Redis\Exception\UnexpectedException;
  */
 class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
+    /** @var RedisClientInterface */
+    protected $redisClient;
+
     /**
      * @inheritdoc
      */
     protected function setUp(): void
     {
+        if (!in_array('redis', get_loaded_extensions())) {
+            $this->markTestSkipped('Skip those units as php-redis extension is not loaded.');
+        }
+
         parent::setUp();
-        $this->redisAdapter->setRedis($this->redisClient);
+
+        $this->redisClient = $this->getMockBuilder(RedisClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['disconnect', 'ping', 'select' , 'client', 'launchConnection'])
+            ->getMock()
+        ;
+
+        $this->redisClient
+            ->expects($this->any())
+            ->method('disconnect')
+            ->willReturnSelf()
+        ;
+        $this->redisClient
+            ->expects($this->any())
+            ->method('ping')
+            ->willReturn(true)
+        ;
+        $this->redisAdapter = new SUT(
+            RedisClientInterface::DEFAULTS['host'],
+            RedisClientInterface::DEFAULTS['port'],
+            null,
+            RedisClientInterface::DEFAULTS['scheme'],
+            RedisClientInterface::DEFAULTS['database'],
+            $this->redisClient
+        );
         $this->assertDefaultContext();
     }
     /**

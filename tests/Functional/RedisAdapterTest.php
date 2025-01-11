@@ -22,12 +22,32 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     /** @var RedisAdapter */
     protected $redisAdapter;
 
-    /** @var array */
+    /**
+     * DEFAULTS to access local redis-server
+     *
+     * @var array
+     */
     protected const DEFAULTS = [
         'host' => '127.0.0.1',
         'port' => 6379,
         'scheme' => 'tcp',
         'database' => 0,
+    ];
+
+    protected const DOCKERS = [
+        [],
+        [
+            'port' => 6375,
+            'password' => 'RedisAuth1',
+        ],
+        [
+            'port' => 6376,
+            'password' => 'RedisAuth2',
+            ],
+        [
+            'port' => 6377,
+            'password' => 'RedisAuth3',
+        ],
     ];
 
     /**
@@ -79,10 +99,29 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     public function testRedisClientSwitchDBs()
     {
-        for ($i = 0; $i < 16; $i++) {
-            $this->assertTrue($this->redisAdapter->selectDatabase($i));
-            $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
+        foreach (self::DOCKERS as $cnfg) {
+            if (isset($cnfg['port']) && isset($cnfg['password'])) {
+                $this->redisAdapter = SUT::createRedisAdapter($cnfg);
+            }
+            for ($i = 0; $i < 16; $i++) {
+                $this->assertTrue($this->redisAdapter->selectDatabase($i));
+                $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
+            }
         }
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
+    }
+
+    public function testRedisClientSwitchRemotes()
+    {
+        for ($i = 0; $i < 16; $i++) {
+            foreach (self::DOCKERS as $cnfg) {
+                $cnfg['database'] = $i;
+                $this->redisAdapter = SUT::createRedisAdapter($cnfg);
+                $this->assertTrue($this->redisAdapter->selectDatabase($i));
+                $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
+            }
+        }
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
     }
 
     /**

@@ -6,6 +6,9 @@ namespace LLegaz\Redis\Tests\Unit;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\UnexpectedException;
+use LLegaz\Redis\PredisClient;
+use LLegaz\Redis\RedisAdapter as SUT;
+use LLegaz\Redis\RedisClientInterface;
 use Predis\Response\Status;
 
 /**
@@ -16,12 +19,39 @@ use Predis\Response\Status;
  */
 class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
+    /** @var RedisClientInterface */
+    protected $predisClient;
+
     /**
      * @inheritdoc
      */
     protected function setUp(): void
     {
         parent::setUp();
+        $this->predisClient = $this->getMockBuilder(PredisClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['disconnect', 'executeCommand'])
+            ->addMethods(['ping', 'select' , 'client'])
+            ->getMock()
+        ;
+        $this->predisClient
+            ->expects($this->any())
+            ->method('disconnect')
+            ->willReturnSelf()
+        ;
+        $this->predisClient
+            ->expects($this->any())
+            ->method('ping')
+            ->willReturn(new Status('PONG'))
+        ;
+        $this->redisAdapter = new SUT(
+            RedisClientInterface::DEFAULTS['host'],
+            RedisClientInterface::DEFAULTS['port'],
+            null,
+            RedisClientInterface::DEFAULTS['scheme'],
+            RedisClientInterface::DEFAULTS['database'],
+            $this->predisClient
+        );
         $this->assertDefaultContext();
     }
     /**
