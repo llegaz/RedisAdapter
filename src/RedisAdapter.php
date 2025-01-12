@@ -229,6 +229,8 @@ class RedisAdapter
     }
 
     /**
+     * The CLIENT LIST command returns information and statistics about the client <b>connections</b> server in a mostly human readable format.
+     * 
      * return client context stored "remotely" on redis server
      *
      * @return array
@@ -236,16 +238,17 @@ class RedisAdapter
      */
     public function getClientCtxtFromRemote(): array
     {
-        $context = $this->clientList();
-        while (!isset($context['id']) || !$this->checkRedisClientId($context['id'])) {
-            // we manage singletons of redis clients that can have concurrent access to the same server
-            $context = array_pop($context);
-        }
-        if (!$this->checkRedisClientId($context['id']) || !isset($context['db'])) {
-
+        $list = $this->clientList();
+        $cnt = count($list);
+        if ($cnt === 1) {
+            $context = array_pop($list);
+        } elseif ($cnt > 1) {
+            //dump($this->checkRedisClientId($context['id']))
+            dump($list, $this->context);
+            throw new LogicException('we\'ve got a problem here');
+        } else {
             throw new LogicException('we\'ve got a problem here');
         }
-
         return $context;
     }
 

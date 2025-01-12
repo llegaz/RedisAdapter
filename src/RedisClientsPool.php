@@ -75,8 +75,10 @@ class RedisClientsPool
             if (self::$isRedis) {
                 include_once 'RedisClient.php';
                 $redis = new RedisClient($conf);
+                dump('new RedisClient instatiated');
             } else {
                 $redis = new PredisClient($conf);
+                dump('new PredisClient instatiated');
             }
 
             // delayed connection

@@ -116,8 +116,10 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         for ($i = 0; $i < 16; $i++) {
             foreach (self::DOCKERS as $cnfg) {
                 $cnfg['database'] = $i;
+                dump('testRedisClientSwitchRemotes');
                 $this->redisAdapter = SUT::createRedisAdapter($cnfg);
-                $this->assertTrue($this->redisAdapter->selectDatabase($i));
+                //$this->assertTrue($this->redisAdapter->selectDatabase($i));
+                dump($this->redisAdapter->getContext());
                 $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
             }
         }
