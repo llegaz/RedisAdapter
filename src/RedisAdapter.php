@@ -128,7 +128,6 @@ class RedisAdapter
 
         try {
             $redisResponse = $this->client->select($db);
-            dump('select: ' . $db);
             $this->context['database'] = $db;
         } catch (Exception $e) {
             $redisResponse = null;
@@ -176,17 +175,15 @@ class RedisAdapter
 
         // simulate predis delayed connection
         if (!$this->client->isConnected()) {
-            $this->client->launchConnection();
-        }
-        if (!$this->client->isConnected()) {
-            return false;
+            if ($this->client->launchConnection() && !$this->client->isConnected()) {
+                return false;
+            }
         }
 
         try {
             $newPing = microtime(true);
             if (!$this->lastPing || (0.45 - ($newPing - $this->lastPing)) < 0) {
                 $ping = $this->client->ping();
-                dump('PING');
                 $this->lastPing = $newPing;
             } else {
                 // already pinged recently (within 450ms)
@@ -229,9 +226,7 @@ class RedisAdapter
     {
         // check if database is well synced from upon instance context and corresponding redis client singleton
         try {
-            //dump('checkIntegrity: ',  $context['db']);
             if (!$this->checkRedisClientDB()) {
-                //dump('switch db from ' . $context['db'] . ' to ' . $this->context['database']);
 
                 return $this->selectDatabase($this->context['database']);
             }

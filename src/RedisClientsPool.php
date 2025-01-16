@@ -48,7 +48,6 @@ class RedisClientsPool
                 unset($client);
             }
         } while (count(self::$clients));
-        //dump(self::$clients);
     }
 
     /**
