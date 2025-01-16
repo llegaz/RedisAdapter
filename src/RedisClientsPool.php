@@ -23,13 +23,13 @@ class RedisClientsPool
     private static array $clients = [];
 
     /**
-     * 
+     *
      * @var bool
      */
     private static bool $isRedis;
 
     /**
-     * 
+     *
      * @var bool
      */
     private static bool $init = false;
@@ -51,6 +51,9 @@ class RedisClientsPool
                 if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
+                /**
+                 * @todo test unset with persistent part
+                 */
                 unset($client);
             }
         } while (count(self::$clients));

@@ -77,5 +77,4 @@ class RedisClient extends \Redis implements RedisClientInterface
     {
         return self::PHP_REDIS;
     }
-
 }

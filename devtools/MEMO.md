@@ -1,3 +1,4 @@
+# MEMO bordelique
 
 src/
    |-> Cache     (psr-6 cache implementation + psr-16 cache entries)
@@ -7,10 +8,13 @@ src/
    PredisAdapter
 
 
+## debug
 ```bash
 $ telnet localhost 6379
 > MONITOR
 ```
 
-- Note: tcp mode seems to rely heavily on `predis/src/Connection/StreamConnection.php`
-
+### default logfile in redis conf
+```bash
+tail -f /var/log/redis/redis-server.log
+```
