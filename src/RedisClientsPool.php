@@ -20,22 +20,40 @@ class RedisClientsPool
      *
      * @var map
      */
-    private static $clients = [];
-    /**
-     * @todo handle phpredis timeouts (polling and retry ?)
-     */
-    private const TIMEOUT = 3;
+    private static array $clients = [];
 
-    public function __destruct()
+    /**
+     * 
+     * @var bool
+     */
+    private static bool $isRedis;
+
+    /**
+     * 
+     * @var bool
+     */
+    private static bool $init = false;
+
+    public static function init(): void
     {
-        foreach (self::$clients as $client) {
+        if (!self::$init) {
+            register_shutdown_function('self::destruct');
+            self::$isRedis = in_array('redis', get_loaded_extensions());
+            self::$init = true;
+        }
+    }
+
+    public static function destruct(): void
+    {
+        do {
+            $client = array_pop(self::$clients);
             if ($client instanceof RedisClientInterface) {
                 if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
                 unset($client);
             }
-        }
+        } while (count(self::$clients));
     }
 
     /**
@@ -55,52 +73,23 @@ class RedisClientsPool
             // get the client back
             $redis = self::$clients[$md5];
         } else {
-            try {
-                self::$clients[$md5] = [];
-                if (isset($conf['persistent']) && $conf['persistent']) {
-                    $conf['persistent'] = count(self::$clients) + 1;
-                    $conf['persistent'] = (string) $conf['persistent'];
-                }
-                //print_r(get_loaded_extensions());
+            self::$clients[$md5] = [];
 
-
-                /**
-                 *
-                 *
-                $redis = new Redis();
-                $con = '';
-                if (isset($conf['scheme']) && strlen($conf['scheme'])) {
-                    $con .= $conf['scheme'];
-                    $con .= '://';
-                }
-                if (!isset($conf['host']) || !strlen($conf['host']) || !isset($conf['port']) || $conf['port'] < 0) {
-                    throw new LogicException('Host and port should be set properly');
-                }
-                $con .= $conf['host'];
-                if (isset($conf['persistent']) && $conf['persistent']) {
-                    $conf['persistent'] = count(self::$clients) + 1;
-                    $conf['persistent'] = (string) $conf['persistent'];
-                    $redis->pconnect($con, $conf['port'], self::TIMEOUT, $conf['persistent']);
-                } else {
-                    $redis->connect($con, $conf['port'], self::TIMEOUT);
-                }
-                if (isset($conf['password'])) {
-                    $redis->auth($conf['password']);
-                }
-                 *
-                 */
-                $redis = new PredisClient($conf);
-                // delayed connection
-                //$redis->connect();
-                self::$clients[$md5] = $redis;
-            } catch (\Exception $e) {
-                $debug = '';
-                if (defined('LLEGAZ_DEBUG')) {
-                    $debug = PHP_EOL . $e->getTraceAsString();
-                }
-
-                throw new ConnectionLostException('Connection to redis server is lost or not responding' . $debug . PHP_EOL, 500, $e);
+            if (isset($conf['persistent']) && $conf['persistent']) {
+                $conf['persistent'] = count(self::$clients) + 1;
+                $conf['persistent'] = (string) $conf['persistent'];
             }
+
+            if (self::$isRedis) {
+                include_once 'RedisClient.php';
+                $redis = new RedisClient($conf);
+            } else {
+                $redis = new PredisClient($conf);
+            }
+
+            // delayed connection
+            //$redis->connect();
+            self::$clients[$md5] = $redis;
         }
 
         if ($redis instanceof RedisClientInterface) {

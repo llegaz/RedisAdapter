@@ -10,8 +10,6 @@ namespace LLegaz\Redis;
  */
 interface RedisClientInterface
 {
-    final public const PREDIS = 'predis';
-    final public const PHP_REDIS = 'php-redis';
     final public const DEFAULTS = [
         'host' => '127.0.0.1',
         'port' => 6379,
@@ -19,6 +17,14 @@ interface RedisClientInterface
         'database' => 0,
         'persistent' => false,
     ];
+
+    final public const PHP_REDIS = 'php-redis';
+    final public const PREDIS = 'predis';
+
+    final public const TIMEOUT = 3; // 3s
+
+    public function disconnect();
+    public function isConnected(): bool;
 
     /**
      * return if connection used is persisted at the end of the script
@@ -30,5 +36,5 @@ interface RedisClientInterface
     /**
      * @return string
      */
-    public function __toString(): string;
+    public function toString(): string;
 }

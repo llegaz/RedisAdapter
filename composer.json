@@ -35,10 +35,12 @@
     "scripts": {
         "pu":"@phpunit",
         "puv":"@phpunit-verbose",
+        "tov":"@test-only-verbose",
         "cs":"@phpcsfixer",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
-        "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter testPredisAdapterDBsWithMultiConnections",
+        "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter RedisAdapterTest::testRedisClientSwitchRemotes",
         "test-verbose": "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --no-output --log-events-text php://stdout --bootstrap .phpunit_full",
+        "test-only-verbose": "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --no-output --log-events-text php://stdout --bootstrap .phpunit_full --filter testRedisAdapterDBsWithMultiConnections",
         "phpunit" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml",
         "phpunit-verbose" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --no-output --log-events-text php://stdout",
         "phpcsfixer": "./vendor/bin/php-cs-fixer fix --config=./.php-cs-fixer.php --diff -vvv"

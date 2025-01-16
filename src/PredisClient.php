@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis;
 
+use LLegaz\Redis\Exception\ConnectionLostException;
 use Predis\Client;
 
 /**
@@ -12,6 +13,20 @@ use Predis\Client;
  */
 class PredisClient extends Client implements RedisClientInterface
 {
+    /**
+     * lil hack for the RedisAdapter isConnected method
+     *
+     * @return bool
+     */
+    public function isConnected(): bool
+    {
+        return true;
+    }
+
+    public function launchConnection(): void
+    {
+        throw new ConnectionLostException();
+    }
 
     /**
      * @todo implement this
@@ -23,9 +38,9 @@ class PredisClient extends Client implements RedisClientInterface
         return false;
     }
 
-    public function __toString(): string
+    public function toString(): string
     {
-        return 'predis';
+        return self::PREDIS;
     }
 
 }

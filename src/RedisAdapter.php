@@ -4,14 +4,27 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis;
 
+use Exception;
 use LLegaz\Redis\Exception\ConnectionLostException;
+use LLegaz\Redis\Exception\LocalIntegrityException;
+use LLegaz\Redis\Exception\UnexpectedException;
 use LogicException;
 use Predis\Response\Status;
 
 /**
- * This class isn't really an adapter but it settles base for other projects based on it
+ * This class isn't really an adapter, it is a <b>GATEWAY</b>.
+ * (see <a href="https://martinfowler.com/articles/gateway-pattern.html">Martin Fowler, Gateway Pattern</a>).
+ * @link https://martinfowler.com/articles/gateway-pattern.html
  *
- * @todo refactor this (rename adapter to base maybe ? or Wrapper ?)
+ * The goal here is to adapt use of either Predis client or native PHP Redis client in a transparently way.
+ * Those are the real adaptees, their respective classes are extended to adapt them for this class, the gateway
+ * to encapsulate one of them and use one or the other indifferently depending on environment.
+ *
+ * It will use preferably PHP Redis if available (extension installed), or else fallback on predis.
+ *
+ *
+ * This class settles base for other projects based on it (PSR-6 Cache and so on)
+ *
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -31,13 +44,19 @@ class RedisAdapter
 
     private ?string $lastErrorMsg = null;
 
+    private ?float $lastPing = null;
+
     /**
      *
+     * @todo add a logger interface to the class, see to format/log exceptions externally of this class
+     *
      * @param string $host
-     * @param type $port
-     * @param string $pwd
-     * @param type $scheme
+     * @param int $port
+     * @param string|null $pwd
+     * @param string $scheme
      * @param int $db
+     * @param RedisClientInterface|null $client
+     * @throws LocalIntegrityException
      */
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
@@ -65,10 +84,15 @@ class RedisAdapter
         if ($client instanceof RedisClientInterface) {
             // for the sake of units
             $this->client = $client;
+            $this->context['client_id'] = 1337;
         } else {
+            RedisClientsPool::init();
             $this->client = RedisClientsPool::getClient($this->context);
-            $this->context['client_id'] = $this->getRedisClientID();
-            $this->checkIntegrity();
+            //$this->context['client_id'] = $this->getRedisClientID();
+            if (!$this->checkIntegrity()) {
+                $this->throwLIEx();
+            }
+
         }
     }
 
@@ -80,8 +104,8 @@ class RedisAdapter
         if ($this->client instanceof RedisClientInterface) {
             if (!$this->client->isPersistent()) {
                 $this->client->disconnect();
+                unset($this->client);
             }
-            unset($this->client);
         }
     }
 
@@ -91,6 +115,7 @@ class RedisAdapter
      * @return bool
      * @throws ConnectionLostException
      * @throws LogicException
+     * @throws UnexpectedException
      */
     public function selectDatabase(int $db): bool
     {
@@ -100,16 +125,28 @@ class RedisAdapter
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        $this->context['database'] = $db;
-        $redisResponse = $this->client->select($db);
 
-        return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : ($redisResponse === true);
+        try {
+            $redisResponse = $this->client->select($db);
+            $this->context['database'] = $db;
+        } catch (Exception $e) {
+            $redisResponse = null;
+            $this->formatException($e);
+        } finally {
+            if (is_null($redisResponse)) {
+                $this->throwUEx();
+            } else {
+
+                return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : ($redisResponse === true);
+            }
+        }
     }
 
     /**
      *
      * @return array
      * @throws ConnectionLostException
+     * @throws UnexpectedException
      */
     public function clientList(): array
     {
@@ -117,7 +154,14 @@ class RedisAdapter
             $this->throwCLEx();
         }
 
-        return $this->client->client('list');
+        try {
+            $list = $this->client->client('list');
+        } catch (Exception $e) {
+            $this->formatException($e);
+            $this->throwUEx();
+        }
+
+        return $list;
     }
 
     /**
@@ -129,17 +173,24 @@ class RedisAdapter
     {
         $ping = false;
 
+        // simulate predis delayed connection
+        if (!$this->client->isConnected() && !$this->client->launchConnection()) {
+                return false;
+        }
+
         try {
-            $ping = $this->client->ping();
-        } catch (\Exception $e) {
-            $debug = '';
-            if (defined('LLEGAZ_DEBUG')) {
-                $debug = PHP_EOL . $e->getTraceAsString();
+            $newPing = microtime(true);
+            if (!$this->lastPing || (0.45 - ($newPing - $this->lastPing)) < 0) {
+                $ping = $this->client->ping();
+                $this->lastPing = $newPing;
+            } else {
+                // already pinged recently (within 450ms)
+                $ping = true;
             }
-            $this->lastErrorMsg = $e->getMessage() . $debug . PHP_EOL;
+        } catch (\Exception $e) {
+            $this->formatException($e);
         } finally {
             if ($ping instanceof Status) {
-
                 return ('PONG' === $ping->getPayload());
             }
 
@@ -167,57 +218,106 @@ class RedisAdapter
      *
      * (see <b>RedisClientsPool</b> @class)
      *
-     * @todo maybe refactor this with pop_helper (units) to add function helper here in adapter class
-     * (to pop out client_list['db'])
-     *
      * @return bool
-     * @throws ConnectionLostException
-     * @throws LogicException
      */
     public function checkIntegrity(): bool
     {
-        $context = $this->clientList();
-        while (!isset($context['id']) || !$this->checkRedisClientId($context['id'])) {
-            // we manage singletons of redis clients but they can have concurrent access to the same server
-            $context = array_pop($context);
-        }
-        if (!$this->checkRedisClientId($context['id']) || !isset($context['db'])) {
-
-            throw new LogicException('we\'ve got a problem here');
-        }
         // check if database is well synced from upon instance context and corresponding redis client singleton
-        if ($this->context['database'] !== intval($context['db'])) {
-            try {
-                dump('switch db from ' . $context['db'] . ' to ' . $this->context['database']);
+        try {
+            if (!$this->checkRedisClientDB()) {
 
                 return $this->selectDatabase($this->context['database']);
-            } catch (\Exception $e) {
-                $debug = '';
-                if (defined('LLEGAZ_DEBUG')) {
-                    $debug = PHP_EOL . $e->getTraceAsString();
-                }
-                $this->lastErrorMsg = $e->getMessage() . $debug . PHP_EOL;
-
-                return false;
             }
+        } catch (ConnectionLostException $cle) {
+            throw $cle;
+        } catch (\Exception $e) {
+            $this->formatException($e);
+
+            return false;
         }
 
         return true;
     }
 
     /**
-     * @throws ConnectionLostException
-     * @return void
+     * The CLIENT LIST command returns information and statistics about the client <b>connections</b> server in a mostly human readable format.
+     *
+     * return client context stored "remotely" on redis server
+     *
+     * @return array
+     * @throws LogicException
      */
-    private function throwCLEx(): void
+    public function getClientCtxtFromRemote(): array
     {
-        if ($this->lastErrorMsg && strlen($this->lastErrorMsg)) {
-            throw new ConnectionLostException($this->lastErrorMsg);
+        $list = $this->clientList();
+        do {
+            $context = array_pop($list);
+            if (/*!isset($context['id']) ||*/ !isset($context['db']) || !isset($context['cmd'])) {
+                throw new LogicException('redis server returned inconsistent data');
+            }
+            if (strpos ($context['cmd'], 'client') === 0) {
+                return $context;
+            }
+        } while (count($list));
+
+        if (!$context) {
+            throw new LogicException('redis server returned no data');
         }
+
+        return $context;
     }
 
     /**
-     * check the client ID stored by remote Redis server
+     * @throws ConnectionLostException
+     */
+    private function throwCLEx(): void
+    {
+        if ($this->lastErrorMsg) {
+            throw new ConnectionLostException($this->lastErrorMsg);
+        }
+
+        throw new ConnectionLostException();
+    }
+
+    /**
+     * @throws LocalIntegrityException
+     */
+    private function throwLIEx(): void
+    {
+        if ($this->lastErrorMsg) {
+            throw new LocalIntegrityException($this->lastErrorMsg);
+        }
+
+        throw new LocalIntegrityException();
+    }
+
+    /**
+     * @throws UnexpectedException
+     */
+    private function throwUEx(): void
+    {
+        if ($this->lastErrorMsg) {
+            throw new UnexpectedException($this->lastErrorMsg);
+        }
+
+        throw new UnexpectedException();
+    }
+
+    /**
+     *
+     * @param \Throwable $t
+     */
+    private function formatException(\Throwable $t): void
+    {
+        $debug = '';
+        if (defined('LLEGAZ_DEBUG')) {
+            $debug = PHP_EOL . $t->getTraceAsString();
+        }
+        $this->lastErrorMsg = $t->getMessage() . $debug . PHP_EOL;
+    }
+
+    /**
+     * check the client <b>connection</b> ID stored by remote Redis server
      *
      * @param mixed $mixed
      * @return bool
@@ -225,6 +325,22 @@ class RedisAdapter
     private function checkRedisClientId($mixed): bool
     {
         return (intval($mixed) === $this->context['client_id']);
+    }
+
+    /**
+     * check the client DB stored by remote Redis server
+     *
+     * @param mixed $mixed  the payload['db'] returned by CLIENT LIST command
+     *                     (normally a string with predis, int with phpredis)
+     * @return bool
+     */
+    public function checkRedisClientDB($mixed = null): bool
+    {
+        if (!$mixed) {
+            $mixed = $this->getClientCtxtFromRemote()['db'];
+        }
+
+        return (intval($mixed) === $this->context['database']);
     }
 
     /**
@@ -266,13 +382,13 @@ class RedisAdapter
      *
      * @return string
      */
-    public function getThisClientID(): string
+    public function getID(): string
     {
         return spl_object_hash($this->client);
     }
 
     /**
-     * fetch remote Redis server managed id for the ongoing connection
+     * fetch id managed by remote Redis server for the ongoing <b>connection</b>
      * (and thus client used here).
      *
      * @return int

@@ -6,8 +6,6 @@ namespace LLegaz\Redis\Tests;
 
 use LLegaz\Redis\RedisAdapter as SUT;
 use LLegaz\Redis\RedisClientInterface;
-use LLegaz\Redis\PredisClient;
-use Predis\Response\Status;
 
 /**
  * @author Laurent LEGAZ <laurent@legaz.eu>
@@ -15,10 +13,9 @@ use Predis\Response\Status;
 class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 {
     /** @var RedisAdapter */
-    protected $redisAdapter;
+    protected SUT $redisAdapter;
 
-    /** @var RedisClientInterface */
-    protected $client;
+    private array $defaults = [];
 
     public static function setUpBeforeClass(): void
     {
@@ -30,32 +27,7 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
-        //$this->client = $this->getMockBuilder(RedisClientInterface::class)
-        $this->client = $this->getMockBuilder(PredisClient::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['disconnect', 'executeCommand'])
-            ->addMethods(['ping', 'select' , 'client'])
-            ->getMock()
-        ;
-        $this->client
-            ->expects($this->any())
-            ->method('disconnect')
-            ->willReturnSelf()
-        ;
-        $this->client
-            ->expects($this->any())
-            ->method('ping')
-            ->willReturn(new Status('PONG'))
-        ;
-        //$this->redisAdapter = (new SUT())->setPredis($this->client);
-        $this->redisAdapter = new SUT(
-            RedisClientInterface::DEFAULTS['host'],
-            RedisClientInterface::DEFAULTS['port'],
-            null,
-            RedisClientInterface::DEFAULTS['scheme'],
-            RedisClientInterface::DEFAULTS['database'],
-            $this->client
-        );
+        $this->defaults = array_merge(RedisClientInterface::DEFAULTS, ['client_id' => '1337']);
     }
 
     /**
@@ -69,11 +41,11 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 
     protected function assertDefaultContext()
     {
-        $this->assertEquals(RedisClientInterface::DEFAULTS, $this->redisAdapter->getContext());
+        $this->assertEquals($this->defaults, $this->redisAdapter->getContext());
     }
 
     protected function assertNotDefaultContext()
     {
-        $this->assertNotEquals(RedisClientInterface::DEFAULTS, $this->redisAdapter->getContext());
+        $this->assertNotEquals($this->defaults, $this->redisAdapter->getContext());
     }
 }

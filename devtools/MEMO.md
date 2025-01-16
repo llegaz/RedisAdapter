@@ -7,6 +7,10 @@ src/
    PredisAdapter
 
 
+```bash
+$ telnet localhost 6379
+> MONITOR
+```
 
 - Note: tcp mode seems to rely heavily on `predis/src/Connection/StreamConnection.php`
 
