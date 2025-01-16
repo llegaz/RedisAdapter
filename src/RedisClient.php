@@ -53,7 +53,12 @@ class RedisClient extends \Redis implements RedisClientInterface
         }
 
         if ($this->pwd) {
-            parent::auth($this->pwd);
+            try {
+                $this->isConnected = parent::auth($this->pwd);
+            } catch (\Exception $e) {
+                $this->isConnected = false;
+            }
+
         }
     }
 
@@ -67,7 +72,7 @@ class RedisClient extends \Redis implements RedisClientInterface
         return $this->isPersistent;
     }
 
-    public function __toString(): string
+    public function toString(): string
     {
         return self::PHP_REDIS;
     }

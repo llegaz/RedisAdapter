@@ -38,9 +38,9 @@ class PredisClient extends Client implements RedisClientInterface
         return false;
     }
 
-    public function __toString(): string
+    public function toString(): string
     {
-        return 'predis';
+        return self::PREDIS;
     }
 
 }

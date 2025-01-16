@@ -33,19 +33,22 @@ class RedisClientsPool
         if (!self::$init) {
             register_shutdown_function('self::destruct');
             self::$isRedis = in_array('redis', get_loaded_extensions());
+            self::$init = true;
         }
     }
 
     public static function destruct()
     {
-        foreach (self::$clients as $client) {
+        do {
+            $client = array_pop(self::$clients);
             if ($client instanceof RedisClientInterface) {
                 if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
                 unset($client);
             }
-        }
+        } while (count(self::$clients));
+        //dump(self::$clients);
     }
 
     /**
@@ -75,10 +78,8 @@ class RedisClientsPool
             if (self::$isRedis) {
                 include_once 'RedisClient.php';
                 $redis = new RedisClient($conf);
-                dump('new RedisClient instatiated');
             } else {
                 $redis = new PredisClient($conf);
-                dump('new PredisClient instatiated');
             }
 
             // delayed connection

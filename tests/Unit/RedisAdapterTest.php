@@ -163,7 +163,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     public function testCheckIntegrity()
     {
         $a = [];
-        $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 0]));
+        $this->assertEquals(1, array_push($a, [/*'id' => 1337,*/ 'db' => 0, 'cmd' => 'client']));
         $this->predisClient->expects($this->once())
             ->method('client')
             ->with('list')
@@ -176,7 +176,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     public function testCheckIntegritySwitchDB()
     {
         $a = [];
-        $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 10]));
+        $this->assertEquals(1, array_push($a, [/*'id' => 1337,*/ 'db' => 10, 'cmd' => 'client']));
         $this->predisClient->expects($this->once())
                 ->method('select')
                 ->willReturn(new Status('OK'))

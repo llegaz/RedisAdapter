@@ -34,10 +34,22 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 
         $this->redisClient = $this->getMockBuilder(RedisClient::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['disconnect', 'ping', 'select' , 'client', 'launchConnection'])
+            ->onlyMethods([
+                'client',
+                'disconnect',
+                'isConnected',
+                'launchConnection',
+                'ping',
+                'select',
+            ])
             ->getMock()
         ;
 
+        $this->redisClient
+            ->expects($this->any())
+            ->method('isConnected')
+            ->willReturn(true)
+        ;
         $this->redisClient
             ->expects($this->any())
             ->method('disconnect')
@@ -174,7 +186,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     public function testCheckIntegrity()
     {
         $a = [];
-        $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 0]));
+        $this->assertEquals(1, array_push($a, [/*'id' => 1337,*/ 'db' => 0, 'cmd' => 'client']));
         $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
@@ -187,7 +199,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     public function testCheckIntegritySwitchDB()
     {
         $a = [];
-        $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 10]));
+        $this->assertEquals(1, array_push($a, [/*'id' => 1337,*/ 'db' => 10, 'cmd' => 'client']));
         $this->redisClient->expects($this->once())
                 ->method('select')
                 ->willReturn(true)
