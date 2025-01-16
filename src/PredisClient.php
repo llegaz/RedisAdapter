@@ -42,5 +42,4 @@ class PredisClient extends Client implements RedisClientInterface
     {
         return self::PREDIS;
     }
-
 }

@@ -104,6 +104,9 @@ class RedisAdapter
         if ($this->client instanceof RedisClientInterface) {
             if (!$this->client->isPersistent()) {
                 $this->client->disconnect();
+                /**
+                 * @todo test unset with persistent part
+                 */
                 unset($this->client);
             }
         }
@@ -175,7 +178,7 @@ class RedisAdapter
 
         // simulate predis delayed connection
         if (!$this->client->isConnected() && !$this->client->launchConnection()) {
-                return false;
+            return false;
         }
 
         try {
@@ -255,7 +258,7 @@ class RedisAdapter
             if (/*!isset($context['id']) ||*/ !isset($context['db']) || !isset($context['cmd'])) {
                 throw new LogicException('redis server returned inconsistent data');
             }
-            if (strpos ($context['cmd'], 'client') === 0) {
+            if (strpos($context['cmd'], 'client') === 0) {
                 return $context;
             }
         } while (count($list));
