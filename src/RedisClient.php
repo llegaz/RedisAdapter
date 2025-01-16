@@ -44,7 +44,7 @@ class RedisClient extends \Redis implements RedisClientInterface
         $this->close();
     }
 
-    public function launchConnection(): void
+    public function launchConnection(): bool
     {
         if ($this->isPersistent) {
             $this->isConnected = parent::pconnect($this->con, $this->port, self::TIMEOUT, $this->persistent);
@@ -55,11 +55,12 @@ class RedisClient extends \Redis implements RedisClientInterface
         if ($this->pwd) {
             try {
                 $this->isConnected = parent::auth($this->pwd);
-            } catch (\Exception $e) {
+            } catch (\Throwable $t) {
                 $this->isConnected = false;
             }
-
         }
+
+        return $this->isConnected;
     }
 
     public function isConnected(): bool

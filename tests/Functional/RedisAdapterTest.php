@@ -247,6 +247,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      * multi clients / multi servers
      *
      * @todo refacto
+     * @todo refacto
+     * @todo refacto !!!
      */
     public function testRedisAdapterDBsWithMultiConnections()
     {

@@ -174,10 +174,8 @@ class RedisAdapter
         $ping = false;
 
         // simulate predis delayed connection
-        if (!$this->client->isConnected()) {
-            if ($this->client->launchConnection() && !$this->client->isConnected()) {
+        if (!$this->client->isConnected() && !$this->client->launchConnection()) {
                 return false;
-            }
         }
 
         try {
@@ -252,9 +250,6 @@ class RedisAdapter
     public function getClientCtxtFromRemote(): array
     {
         $list = $this->clientList();
-        /*if (count($list) > 1 ) {
-            dd($list);
-        }*/
         do {
             $context = array_pop($list);
             if (/*!isset($context['id']) ||*/ !isset($context['db']) || !isset($context['cmd'])) {

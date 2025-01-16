@@ -21,14 +21,20 @@ class RedisClientsPool
      * @var map
      */
     private static array $clients = [];
+
     /**
-     * @todo handle phpredis timeouts (polling and retry ?)
+     * 
+     * @var bool
      */
-    private const TIMEOUT = 3;
     private static bool $isRedis;
+
+    /**
+     * 
+     * @var bool
+     */
     private static bool $init = false;
 
-    public static function init()
+    public static function init(): void
     {
         if (!self::$init) {
             register_shutdown_function('self::destruct');
@@ -37,7 +43,7 @@ class RedisClientsPool
         }
     }
 
-    public static function destruct()
+    public static function destruct(): void
     {
         do {
             $client = array_pop(self::$clients);
