@@ -50,6 +50,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
             null,
             RedisClientInterface::DEFAULTS['scheme'],
             RedisClientInterface::DEFAULTS['database'],
+            false,
             $this->predisClient
         );
         $this->assertDefaultContext();
@@ -160,23 +161,28 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         $this->redisAdapter->clientList();
     }
 
+    /**
+     * @todo work this or remove (id vs client_id)
+     * rework $this->assertTrue($this->redisAdapter->checkRedisClientId());
+     */
     public function testCheckIntegrity()
     {
         $a = [];
-        $this->assertEquals(1, array_push($a, [/*'id' => 1337,*/ 'db' => 0, 'cmd' => 'client']));
-        $this->predisClient->expects($this->once())
+        $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 0, 'cmd' => 'client']));
+        $this->predisClient->expects($this->exactly(2))
             ->method('client')
             ->with('list')
             ->willReturn($a)
         ;
         $this->assertTrue($this->redisAdapter->checkIntegrity());
+        $this->assertTrue($this->redisAdapter->checkRedisClientId());
         $this->assertDefaultContext();
     }
 
     public function testCheckIntegritySwitchDB()
     {
         $a = [];
-        $this->assertEquals(1, array_push($a, [/*'id' => 1337,*/ 'db' => 10, 'cmd' => 'client']));
+        $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 10, 'cmd' => 'client']));
         $this->predisClient->expects($this->once())
                 ->method('select')
                 ->willReturn(new Status('OK'))

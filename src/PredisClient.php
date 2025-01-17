@@ -29,13 +29,18 @@ class PredisClient extends Client implements RedisClientInterface
     }
 
     /**
-     * @todo implement this
      *
      * @return bool
      */
     public function isPersistent(): bool
     {
-        return false;
+        $c = $this->getConnection();
+        if (!$c) {
+            return false;
+        }
+        $p = $c->getParameters()->toArray()['persistent'];
+
+        return (is_string($p) && strlen($p));
     }
 
     public function toString(): string

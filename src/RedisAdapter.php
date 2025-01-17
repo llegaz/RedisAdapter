@@ -64,6 +64,7 @@ class RedisAdapter
         ?string $pwd = null,
         string $scheme = RedisClientInterface::DEFAULTS['scheme'],
         int $db = RedisClientInterface::DEFAULTS['database'],
+        bool $persistent = false,
         ?RedisClientInterface $client = null
     ) {
         $this->context = [
@@ -71,12 +72,11 @@ class RedisAdapter
             'port' => $port,
             'scheme' => $scheme,
             'database' => $db,
-            // be ↓↓↓ careful ↓↓↓ with persistent connection
-            // see https://github.com/predis/predis/issues/178#issuecomment-45851451
             /**
-             * @todo try persistent connections with php-fpm
+             * be ↓↓↓ careful ↓↓↓ with persistent connection
+             * see https://github.com/predis/predis/issues/178#issuecomment-45851451
              */
-            'persistent' => false,
+            'persistent' => $persistent,
         ];
         if ($pwd && strlen($pwd)) {
             $this->context['password'] = $pwd;
@@ -88,7 +88,7 @@ class RedisAdapter
         } else {
             RedisClientsPool::init();
             $this->client = RedisClientsPool::getClient($this->context);
-            //$this->context['client_id'] = $this->getRedisClientID();
+            $this->context['client_id'] = $this->getRedisClientID();
             if (!$this->checkIntegrity()) {
                 $this->throwLIEx();
             }
@@ -101,6 +101,7 @@ class RedisAdapter
      */
     public function __destruct()
     {
+        //dump('RedisAdapter destructor called');
         if ($this->client instanceof RedisClientInterface) {
             if (!$this->client->isPersistent()) {
                 $this->client->disconnect();
@@ -108,6 +109,7 @@ class RedisAdapter
                  * @todo test unset with persistent part
                  */
                 unset($this->client);
+                dump('RedisAdapter destructor called');
             }
         }
     }
@@ -253,15 +255,24 @@ class RedisAdapter
     public function getClientCtxtFromRemote(): array
     {
         $list = $this->clientList();
-        do {
+        while (count($list)) {
             $context = array_pop($list);
-            if (/*!isset($context['id']) ||*/ !isset($context['db']) || !isset($context['cmd'])) {
+            if (!isset($context['id']) || !isset($context['db']) || !isset($context['cmd'])) {
                 throw new LogicException('redis server returned inconsistent data');
             }
-            if (strpos($context['cmd'], 'client') === 0) {
-                return $context;
+            if ($this->client->isPersistent()) {
+                if (intval($context['id']) === $this->context['client_id']) {
+                    return $context;
+                }
+            } else {
+                /**
+                 * @todo find a better workaround
+                 */
+                if (strpos($context['cmd'], 'client') === 0) {
+                    return $context;
+                }
             }
-        } while (count($list));
+        }
 
         if (!$context) {
             throw new LogicException('redis server returned no data');
@@ -322,11 +333,17 @@ class RedisAdapter
     /**
      * check the client <b>connection</b> ID stored by remote Redis server
      *
+     * @todo work this or remove
+     *
      * @param mixed $mixed
      * @return bool
      */
-    private function checkRedisClientId($mixed): bool
+    public function checkRedisClientId($mixed = null): bool
     {
+        if (!$mixed) {
+            $mixed = $this->getClientCtxtFromRemote()['id'];
+        }
+
         return (intval($mixed) === $this->context['client_id']);
     }
 
