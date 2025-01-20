@@ -186,7 +186,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 
 
     /**
-     * @todo work this or remove (id vs client_id)
+     * @todo mb rework this (id vs client_id)
      * rework $this->assertTrue($this->redisAdapter->checkRedisClientId());
      */
     public function testCheckIntegrity()

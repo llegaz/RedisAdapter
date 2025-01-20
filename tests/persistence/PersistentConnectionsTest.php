@@ -28,7 +28,7 @@ function shutdown()
 }
 
 /**
- * @todo enhance here try with docker instances, test auth on persistent conns
+ * @todo mb enhance here try with docker instances, test auth on persistent conns
  *       see if refactoring is needed for persistent conns in RedisAdapter class?
  *       refacto dump below..
  */
@@ -52,7 +52,7 @@ for ($x = 1; $x < 4; $x++) {
                 // @child
                 print "FORK: Child #{$x}\n";
                 while (1) {
-                    usleep(mt_rand(500000,4000000));
+                    usleep(mt_rand(500000, 4000000));
                     test();
                 }
 

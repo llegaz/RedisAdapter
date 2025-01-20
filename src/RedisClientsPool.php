@@ -51,11 +51,7 @@ class RedisClientsPool
                 if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
-                /**
-                 * @todo test unset with persistent part
-                 */
                 unset($client);
-                dump('RedisClientsPool static destructor called');
             }
         } while (count(self::$clients));
     }

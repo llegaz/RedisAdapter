@@ -101,15 +101,10 @@ class RedisAdapter
      */
     public function __destruct()
     {
-        //dump('RedisAdapter destructor called');
         if ($this->client instanceof RedisClientInterface) {
             if (!$this->client->isPersistent()) {
                 $this->client->disconnect();
-                /**
-                 * @todo test unset with persistent part
-                 */
                 unset($this->client);
-                dump('RedisAdapter destructor called');
             }
         }
     }
@@ -213,8 +208,9 @@ class RedisAdapter
         $pwd = $conf['password'] ?? null;
         $scheme = $conf['scheme'] ?? RedisClientInterface::DEFAULTS['scheme'];
         $db = $conf['database'] ?? RedisClientInterface::DEFAULTS['database'];
+        $p = $conf['persistent'] ?? RedisClientInterface::DEFAULTS['persistent'];
 
-        return new self($host, $port, $pwd, $scheme, $db);
+        return new self($host, $port, $pwd, $scheme, $db, $p);
     }
 
     /**
@@ -332,8 +328,6 @@ class RedisAdapter
 
     /**
      * check the client <b>connection</b> ID stored by remote Redis server
-     *
-     * @todo work this or remove
      *
      * @param mixed $mixed
      * @return bool
