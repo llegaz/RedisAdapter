@@ -58,7 +58,7 @@ class RedisClientsPool
 
     /**
      * Multiple clients handler -
-     * it returns and manage singletons (predis or phpredis client) for each for a client/server pair
+     * it returns and manage singletons (predis or phpredis client) for a client/server pair
      *
      * @param array $conf
      * @return RedisClientInterface
