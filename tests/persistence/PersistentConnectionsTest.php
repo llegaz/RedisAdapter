@@ -34,7 +34,7 @@ function shutdown()
  */
 function test()
 {
-    $redis = new RedisAdapter('127.0.0.1', 6379, null, 'tcp', mt_rand(0, 15));
+    $redis = new RedisAdapter('127.0.0.1', 6379, null, 'tcp', mt_rand(0, 15), true);
     //dump('***', $redis->getContext()['client_id']/*, RedisClientsPool::clientCount(), $redis->checkRedisClientId()*/, $redis->getRedisClientID(), $redis->getClientCtxtFromRemote()['id'], '----');
     dump($redis->getContext()['client_id'] . ' ' . $redis->getRedisClientID() . ' ' . $redis->getClientCtxtFromRemote()['id']);
 }

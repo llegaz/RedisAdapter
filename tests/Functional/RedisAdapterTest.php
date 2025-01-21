@@ -155,6 +155,20 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($this->redisAdapter->getRedisClientID(), $otherClientID);
     }
 
+    public function testStupidClientInvokation()
+    {
+        $i = 36;
+        $cfg = self::DEFAULTS;
+        while ($i--) {
+            $j = mt_rand(1, 3);
+            $cfg['port'] = self::DOCKERS[$j]['port'];
+            $cfg['password'] = self::DOCKERS[$j]['password'];
+            $cfg['database'] = $i%16;
+            $test = SUT::createRedisAdapter($cfg);
+            $this->assertTrue($test->isConnected());
+        }
+    }
+
     public function testEmptyClientsPool()
     {
         $this->assertEquals(1, RedisClientsPool::clientCount());
@@ -352,6 +366,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     /**
      * test multiple instantiation with persistent connections
+     * 
+     * @depends testStupidClientInvokation
      */
     public function testClientsInvokationWithPersistentConn(): array
     {
