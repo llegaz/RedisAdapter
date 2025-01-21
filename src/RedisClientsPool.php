@@ -51,6 +51,9 @@ class RedisClientsPool
                 if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
+                /**
+                 * @todo test unset with persistent part
+                 */
                 unset($client);
             }
         } while (count(self::$clients));

@@ -104,6 +104,9 @@ class RedisAdapter
         if ($this->client instanceof RedisClientInterface) {
             if (!$this->client->isPersistent()) {
                 $this->client->disconnect();
+                /**
+                 * @todo test unset with persistent part
+                 */
                 unset($this->client);
             }
         }
