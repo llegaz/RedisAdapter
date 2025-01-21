@@ -76,8 +76,6 @@ class RedisClientsPool
             // get the client back
             $redis = self::$clients[$md5];
         } else {
-            self::$clients[$md5] = [];
-
             if (isset($conf['persistent']) && $conf['persistent']) {
                 $conf['persistent'] = count(self::$clients) + 1;
                 $conf['persistent'] = (string) $conf['persistent'];

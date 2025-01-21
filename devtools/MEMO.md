@@ -8,6 +8,12 @@ src/
    PredisAdapter
 
 
+## dev workflow
+Don't forget to test `composer test` with php-redis extension installed, but also without.. (predis fallback)
+```bash
+$ apt-cache policy php8.1-redis
+```
+
 ## debug
 ```bash
 $ telnet localhost 6379

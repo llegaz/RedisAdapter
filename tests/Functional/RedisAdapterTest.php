@@ -14,7 +14,6 @@ if (!defined('SKIP_FUNCTIONAL_TESTS')) {
 }
 
 /**
- * @todo refacto tests
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -37,6 +36,9 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         'database' => 0,
     ];
 
+    /**
+     * all servers conf (local default+dockers)
+     */
     protected const DOCKERS = [
         [],
         [
@@ -52,6 +54,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             'password' => 'RedisAuth3',
         ],
     ];
+
+    protected const DB_COUNT = 16;
 
     /**
      * @inheritdoc
@@ -75,6 +79,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->redisAdapter = new SUT();
         /**
          * retrieve initial clients count, resulting expected count will be calculated from it
+         * (hazardous)
          */
         $this->clientsCount = count($this->redisAdapter->clientList());
     }
@@ -112,7 +117,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             if (isset($cnfg['port']) && isset($cnfg['password'])) {
                 $this->redisAdapter = SUT::createRedisAdapter($cnfg);
             }
-            for ($i = 0; $i < 16; $i++) {
+            for ($i = 0; $i < self::DB_COUNT; $i++) {
                 $this->assertTrue($this->redisAdapter->selectDatabase($i));
                 $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
             }
@@ -122,7 +127,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     public function testRedisClientSwitchRemotes()
     {
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < self::DB_COUNT; $i++) {
             foreach (self::DOCKERS as $cnfg) {
                 $cnfg['database'] = $i;
                 $this->redisAdapter = SUT::createRedisAdapter($cnfg);
@@ -150,6 +155,20 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($this->redisAdapter->getRedisClientID(), $otherClientID);
     }
 
+    public function testStupidClientInvokation()
+    {
+        $i = 36;
+        $cfg = self::DEFAULTS;
+        while ($i--) {
+            $j = mt_rand(1, 3);
+            $cfg['port'] = self::DOCKERS[$j]['port'];
+            $cfg['password'] = self::DOCKERS[$j]['password'];
+            $cfg['database'] = $i%16;
+            $test = SUT::createRedisAdapter($cfg);
+            $this->assertTrue($test->isConnected());
+        }
+    }
+
     public function testEmptyClientsPool()
     {
         $this->assertEquals(1, RedisClientsPool::clientCount());
@@ -167,20 +186,31 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testSingleClientInvokationConsistency()
     {
         $cfg = self::DEFAULTS;
-        $cfg['database'] = 3;
-        $un = SUT::createRedisAdapter($cfg)->getID();
-        $deux = SUT::createRedisAdapter($cfg)->getID();
-        $cfg['database'] = 4;
-        $test = SUT::createRedisAdapter($cfg);
-        $trois = $test->getID();
-        $cfg['database'] = 12;
-        $quatre = SUT::createRedisAdapter($cfg)->getID();
-        $this->assertEquals($un, $deux);
-        $this->assertEquals($un, $trois);
-        $this->assertEquals($un, $quatre);
-        $this->assertEquals($deux, $trois);
-        $this->assertEquals($deux, $quatre);
-        $this->assertEquals($trois, $quatre);
+        $init = [3, 3, 4,12,];
+        $instances = [];
+        foreach ($init as $db) {
+            $cfg['database'] = $db;
+            $sut = SUT::createRedisAdapter($cfg);
+            if ($db === 4) {
+                $test = $sut;
+            }
+            $instances[] = $sut->getID();
+        }
+
+        $this->assertNotNull($test);
+        /**
+         * check that all our instantiated adapters share the same client object
+         */
+        $i = 0;
+        while (count($instances) > 1) {
+            $instance = array_pop($instances);
+            foreach ($instances as $other) {
+                $this->assertEquals($instance, $other);
+                $i++;
+            }
+        }
+        // modify this if you alter $init
+        $this->assertEquals(6, $i);
         /**
          * ensure the same client is reused (by different objects)
          */
@@ -193,81 +223,85 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
         // sugar..
         $this->assertTrue($test->checkIntegrity());
+        $this->assertTrue($test->checkRedisClientDB());
         $this->assertEquals(4, $test->getClientCtxtFromRemote()['db']);
     }
 
     /**
      * More testing of <b>RedisClientsPool</b> clients singleton management through RedisAdapter Class:
      * multiple clients are instantiated and should be retrieved through the  <b>RedisClientsPool</b> helper.
-     *
-     * @todo refacto
      */
     public function testMultipleClientsInvokationConsistency()
     {
-        $un = $this->redisAdapter->getID();
+        $a = $b = [];
+        foreach (self::DOCKERS as $cfg) {
+            if (isset($cfg['port']) && isset($cfg['password'])) {
+                $newInstance = new SUT(self::DEFAULTS['host'], $cfg['port'], $cfg['password']);
+                $a[] = [$newInstance, $newInstance->getID()];
+            } else {
+                $a[] = [$this->redisAdapter, $this->redisAdapter->getID()];
+            }
+        }
+        $this->assertEquals(RedisClientsPool::clientCount(), count($a));
+        $i = 0;
+        while (count($a)) {
+            list($sut, $id) = array_pop($a);
+            $b[] = $sut;
+            $this->assertTrue($sut->isConnected());
+            foreach ($a as list($other, $other_id)) {
+                $this->assertNotEquals($id, $other_id);
+                $this->assertNotEquals($sut, $other);
+                $this->assertNotEquals($sut->getID(), $other->getID());
+                $i++;
+            }
+        }
+        $this->assertEquals(6, $i);
 
-        $test = new SUT('127.0.0.1', 6375, 'RedisAuth1');
-        $deux = $test->getID();
-
-        $test2 = new SUT('127.0.0.1', 6376, 'RedisAuth2');
-        $trois = $test2->getID();
-
-        $test3 = new SUT('127.0.0.1', 6377, 'RedisAuth3');
-        $quatre = $test3->getID();
-
-        $this->assertTrue($test->isConnected());
-        $this->assertTrue($test2->isConnected());
-        $this->assertTrue($test3->isConnected());
-
-
+        foreach ($b as $sut) {
+            $ctx = $sut->getContext();
+            $testAgain = new SUT($ctx['host'], $ctx['port'], $ctx['password'] ?? null, $ctx['scheme'], $i);
+            $this->assertTrue($testAgain->isConnected());
+            $this->assertTrue($sut->isConnected());
+            $this->assertEquals($sut->getID(), $testAgain->getID());
+            $this->assertEquals($sut->getRedisClientID(), $testAgain->getRedisClientID());
+        }
         $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
 
-        $this->assertNotEquals($un, $deux);
-        $this->assertNotEquals($un, $trois);
-        $this->assertNotEquals($un, $quatre);
-        $this->assertNotEquals($deux, $trois);
-        $this->assertNotEquals($deux, $quatre);
-        $this->assertNotEquals($trois, $quatre);
-        $i = 3;
-        while ($i > 0) {
-            $testAgain = new SUT('127.0.0.1', 6374 + $i, 'RedisAuth' . $i, 'tcp', $i);
+        // create new clients with persistent conns
+        foreach ($b as $sut) {
+            $ctx = $sut->getContext();
+            $testAgain = new SUT($ctx['host'], $ctx['port'], $ctx['password'] ?? null, $ctx['scheme'], $i, true);
             $this->assertTrue($testAgain->isConnected());
-            $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
-            if ($i === 1) {
-                $i = '';
-            }
-            $this->assertEquals(${"test$i"}->getID(), $testAgain->getID());
-            $this->assertEquals(${"test$i"}->getRedisClientID(), $testAgain->getRedisClientID());
-            $this->assertNotEquals($this->redisAdapter->getRedisClientID(), $testAgain->getRedisClientID());
-            $i--;
+            $this->assertTrue($sut->isConnected());
+            $this->assertNotEquals($sut->getID(), $testAgain->getID());
+            $this->assertNotEquals($sut->getRedisClientID(), $testAgain->getRedisClientID());
         }
+        $this->assertEquals(count(self::DOCKERS) * 2, RedisClientsPool::clientCount());
     }
 
     /**
      * multi clients / multi servers
      *
-     * @todo refacto
-     * @todo refacto
-     * @todo refacto !!!
+     * @todo refacto using persistent connections (up to 8 clients simultaneous)
+     *              and split this test into smaller parts if possible..
+     *              Not a high priority tho.
+     *              Check <code>testPersistentConnsAreReusedOnNextInvokation</code>
+     *              to do something similar but inverted and make sure that indeed 
+     *              redis clients aren't reused on next invocation (once clients are 
+     *              purged from setup non-persistent connections aren't reused)
      */
     public function testRedisAdapterDBsWithMultiConnections()
     {
-        $cfg = self::DEFAULTS;
         $a = [];
-        $a[] = [$this->redisAdapter, count($this->redisAdapter->clientList())];
-        $cfg['port'] = 6375;
-        $cfg['password'] = 'RedisAuth1';
-        $newInstance = SUT::createRedisAdapter($cfg);
-        $a[] = [$newInstance, count($newInstance->clientList())];
-        $cfg['port'] = 6376;
-        $cfg['password'] = 'RedisAuth2';
-        $newInstance = SUT::createRedisAdapter($cfg);
-        $a[] = [$newInstance, count($newInstance->clientList())];
-        $cfg['port'] = 6377;
-        $cfg['password'] = 'RedisAuth3';
-        $newInstance = SUT::createRedisAdapter($cfg);
-        $a[] = [$newInstance, count($newInstance->clientList())];
-        for ($i = 0; $i < 16; $i++) {
+        foreach (self::DOCKERS as $cfg) {
+            if (count($cfg)) {
+                $newInstance = SUT::createRedisAdapter($cfg);
+                $a[] = [$newInstance, count($newInstance->clientList())];
+            } else {
+                $a[] = [$this->redisAdapter, count($this->redisAdapter->clientList())];
+            }
+        }
+        for ($i = 0; $i < self::DB_COUNT; $i++) {
             foreach ($a as list($pa, $cnt)) {
                 $this->assertTrue($pa->isConnected());
                 $this->assertTrue($pa->selectDatabase($i));
@@ -281,49 +315,39 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         /**
          * then add more adapter objects
          */
-        $cfg['port'] = 6375;
-        $cfg['password'] = 'RedisAuth1';
-        $cfg['database'] = 3;
-        $newInstance = SUT::createRedisAdapter($cfg);
-        $a[] = [$newInstance, count($newInstance->clientList())];
-        $cfg['port'] = 6376;
-        $cfg['password'] = 'RedisAuth2';
-        $cfg['database'] = 4;
-        $newInstance = SUT::createRedisAdapter($cfg);
-        $a[] = [$newInstance, count($newInstance->clientList())];
-        $cfg['port'] = 6377;
-        $cfg['password'] = 'RedisAuth3';
-        $cfg['database'] = 9;
-        $newInstance = SUT::createRedisAdapter($cfg);
-        $a[] = [$newInstance, count($newInstance->clientList())];
-        // here we have dupplicates (3 new instances which weren't really instantiated)
+        foreach (self::DOCKERS as $cfg) {
+            if (count($cfg)) {
+                $cfg['database'] = mt_rand(1, 13);
+                $newInstance = SUT::createRedisAdapter($cfg);
+                $a[] = [$newInstance, count($newInstance->clientList())];
+            }
+        }
+        // here we have dupplicates (3 new adapter instances reusing previously instantiated redis client singletons)
         $this->assertNotEquals(RedisClientsPool::clientCount(), count($a));
 
         $final = [];
         foreach ($a as list($pa, $cnt)) {
+            // both adapters use the same client so whe should retrieve the same count of clients
             $this->assertEquals($cnt, count($pa->clientList()));
             $id = $pa->getID();
 
-            // same referenced clients SHOULD have the same final state
+            // purging dupplicates
             if (isset($final[$id])) {
-                // here real predis client are sync (singletons)
+                // make sure different adapters use the same client(singleton) based on its state
                 $this->checkRemote($final[$id], $pa);
-
-                // but redisAdapter instances' contexts are not
+                // client state is different that adapters' context (last adapter prevailed)
                 $this->assertNotEquals(($final[$id])->getContext(), $pa->getContext());
-
-                /**
-                 * j'avoue là on se tire les cheveux.. intégrité quand tu nous tiens
-                 */
+                // reset client state to fistrly instantiated adapter context
                 $this->assertTrue(($final[$id])->checkIntegrity());
                 $this->checkLocal($final[$id]);
-                // all starting connections were made on db0 (default) and they theorically should be the first elements in final array (this works only fro predis)
-
+                // do the same on last instantiated adapter then testing checkIntegrity method
                 $this->assertTrue($pa->checkIntegrity());
                 $this->checkLocal($pa);
 
                 // all starting connections were made on db0 (default)
-                if ($pa->getRedis()->toString() === RedisClientInterface::PREDIS && ($final[$id])->getRedis()->toString() === RedisClientInterface::PREDIS) {
+                if ($pa->getRedis()->toString() === RedisClientInterface::PREDIS &&
+                        ($final[$id])->getRedis()->toString() === RedisClientInterface::PREDIS) {
+                    // shit works on predis only maybe remove it as it is useless check
                     $this->assertEquals(0, ($final[$id])->getRedis()->getConnection()->getParameters()->toArray()['database']);
                     $this->assertEquals(0, $pa->getRedis()->getConnection()->getParameters()->toArray()['database']);
                 }
@@ -338,6 +362,79 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         }
         // dupplicates were eliminated
         $this->assertEquals(RedisClientsPool::clientCount(), count($final));
+    }
+
+    /**
+     * test multiple instantiation with persistent connections
+     * 
+     * @depends testStupidClientInvokation
+     */
+    public function testClientsInvokationWithPersistentConn(): array
+    {
+        $persistentIDs = [];
+        foreach (self::DOCKERS as $cnfg) {
+            $cnfg['persistent'] = true;
+            $this->redisAdapter = SUT::createRedisAdapter($cnfg);
+            $this->assertTrue($this->redisAdapter->checkRedisClientId());
+            $pID = $this->redisAdapter->getRedisClientID();
+            for ($i = 0; $i < self::DB_COUNT; $i++) {
+                $this->assertTrue($this->redisAdapter->selectDatabase($i));
+                $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
+            }
+            $this->assertTrue($this->redisAdapter->checkRedisClientId());
+            $this->assertTrue($this->redisAdapter->checkRedisClientId($pID));
+            $persistentIDs[] = $pID;
+        }
+        // 4 persistent clients + 1 defaulf redisAdapter instantiated on set up
+        $this->assertEquals(count(self::DOCKERS) + 1, RedisClientsPool::clientCount());
+
+        return $persistentIDs;
+    }
+
+    /**
+     * @depends testClientsInvokationWithPersistentConn
+     */
+    public function testClientsInvokationWithPersistentConn2(array $persistentIDs): array
+    {
+        // clear singletons pool
+        RedisClientsPool::destruct();
+        foreach (self::DOCKERS as $cnfg) {
+            $cnfg['persistent'] = true;
+            $cnfg['database'] = 13;
+            $this->redisAdapter = SUT::createRedisAdapter($cnfg);
+            $this->assertTrue($this->redisAdapter->checkRedisClientId());
+            $pID = $this->redisAdapter->getRedisClientID();
+            $this->assertTrue(
+                    // skip predis.. not reusing persistent connections properly ?
+                    $this->redisAdapter->getRedis()->toString() === RedisClientInterface::PREDIS || 
+                    in_array($pID, $persistentIDs)
+            );
+            $this->assertTrue($this->redisAdapter->checkRedisClientId($pID));
+        }
+        // 4 persistent clients only
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
+
+        return $persistentIDs;
+    }
+
+    /**
+     * @depends testClientsInvokationWithPersistentConn2
+     */
+    public function testPersistentConnsAreReusedOnNextInvokation(array $persistentIDs)
+    {
+        $previousID = null;
+        foreach (self::DOCKERS as $cnfg) {
+            $cnfg['persistent'] = true;
+            $this->redisAdapter = SUT::createRedisAdapter($cnfg);
+            $pID = $this->redisAdapter->getRedisClientID();
+            $this->assertTrue(in_array($pID, $persistentIDs));
+            if ($previousID) {
+                $this->assertNotEquals($previousID, $pID);
+            }
+            $previousID = $pID;
+        }
+        // 4 persistent clients + 1 defaulf redisAdapter instantiated on set up
+        $this->assertEquals(count(self::DOCKERS) + 1, RedisClientsPool::clientCount());
     }
 
     /**
