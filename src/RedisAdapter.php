@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis;
 
-use Exception;
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\LocalIntegrityException;
 use LLegaz\Redis\Exception\UnexpectedException;
 use LogicException;
 use Predis\Response\Status;
+use Throwable;
 
 /**
  * This class isn't really an adapter, it is a <b>GATEWAY</b>.
@@ -129,7 +129,7 @@ class RedisAdapter
         try {
             $redisResponse = $this->client->select($db);
             $this->context['database'] = $db;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $redisResponse = null;
             $this->formatException($e);
         } finally {
@@ -156,7 +156,7 @@ class RedisAdapter
 
         try {
             $list = $this->client->client('list');
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->formatException($e);
             $this->throwUEx();
         }
@@ -187,7 +187,7 @@ class RedisAdapter
                 // already pinged recently (within 450ms)
                 $ping = true;
             }
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $this->formatException($e);
         } finally {
             if ($ping instanceof Status) {
@@ -231,7 +231,7 @@ class RedisAdapter
             }
         } catch (ConnectionLostException $cle) {
             throw $cle;
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $this->formatException($e);
 
             return false;
@@ -315,9 +315,9 @@ class RedisAdapter
 
     /**
      *
-     * @param \Throwable $t
+     * @param Throwable $t
      */
-    private function formatException(\Throwable $t): void
+    private function formatException(Throwable $t): void
     {
         $debug = '';
         if (defined('LLEGAZ_DEBUG')) {
