@@ -1,7 +1,18 @@
 # Predis Adapter
 
 ## Intro
-This is my custom [predis](https://github.com/predis/predis) wrapper for future work based on this work. It is a refactor of classes and tools I've developed and have used in many projects for years..
+
+This project isn't really an adapter, for me, it is a sort of <b>GATEWAY</b>.
+(see [Martin Fowler, Gateway Pattern](https://martinfowler.com/articles/gateway-pattern.html)).
+
+The goal here is to adapt use of either [Predis](https://github.com/predis/predis) client or native [PHP Redis](https://github.com/phpredis/phpredis/) client in a transparently way.
+Those are the real adaptees, their respective classes are extended to adapt them to the gateway (`RedisAdapter`)
+that will encapsulate one of them (as a redis client) and use one or the other indifferently depending on environment.
+
+It will use preferably [PHP Redis](https://github.com/phpredis/phpredis/) if available (extension installed), or else fallback on [predis](https://github.com/predis/predis).
+
+
+This class settles base for other projects based on it (PSR-6 Cache and so on)
 
 
 ## Install
