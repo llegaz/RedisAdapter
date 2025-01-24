@@ -1,4 +1,4 @@
-# Predis Adapter
+# Redis Adapter
 
 ## Intro
 
