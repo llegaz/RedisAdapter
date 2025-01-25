@@ -163,7 +163,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $j = mt_rand(1, 3);
             $cfg['port'] = self::DOCKERS[$j]['port'];
             $cfg['password'] = self::DOCKERS[$j]['password'];
-            $cfg['database'] = $i%16;
+            $cfg['database'] = $i % 16;
             $test = SUT::createRedisAdapter($cfg);
             $this->assertTrue($test->isConnected());
         }
@@ -286,8 +286,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      *              and split this test into smaller parts if possible..
      *              Not a high priority tho.
      *              Check <code>testPersistentConnsAreReusedOnNextInvokation</code>
-     *              to do something similar but inverted and make sure that indeed 
-     *              redis clients aren't reused on next invocation (once clients are 
+     *              to do something similar but inverted and make sure that indeed
+     *              redis clients aren't reused on next invocation (once clients are
      *              purged from setup non-persistent connections aren't reused)
      */
     public function testRedisAdapterDBsWithMultiConnections()
@@ -366,7 +366,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     /**
      * test multiple instantiation with persistent connections
-     * 
+     *
      * @depends testStupidClientInvokation
      */
     public function testClientsInvokationWithPersistentConn(): array
@@ -405,9 +405,9 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $this->assertTrue($this->redisAdapter->checkRedisClientId());
             $pID = $this->redisAdapter->getRedisClientID();
             $this->assertTrue(
-                    // skip predis.. not reusing persistent connections properly ?
-                    $this->redisAdapter->getRedis()->toString() === RedisClientInterface::PREDIS || 
-                    in_array($pID, $persistentIDs)
+                // skip predis.. not reusing persistent connections properly ?
+                $this->redisAdapter->getRedis()->toString() === RedisClientInterface::PREDIS ||
+                in_array($pID, $persistentIDs)
             );
             $this->assertTrue($this->redisAdapter->checkRedisClientId($pID));
         }
