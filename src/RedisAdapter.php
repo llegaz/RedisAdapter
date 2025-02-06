@@ -280,7 +280,7 @@ class RedisAdapter
     /**
      * @throws ConnectionLostException
      */
-    private function throwCLEx(): void
+    protected function throwCLEx(): void
     {
         if ($this->lastErrorMsg) {
             throw new ConnectionLostException($this->lastErrorMsg);
@@ -292,7 +292,7 @@ class RedisAdapter
     /**
      * @throws LocalIntegrityException
      */
-    private function throwLIEx(): void
+    protected function throwLIEx(): void
     {
         if ($this->lastErrorMsg) {
             throw new LocalIntegrityException($this->lastErrorMsg);
@@ -304,7 +304,7 @@ class RedisAdapter
     /**
      * @throws UnexpectedException
      */
-    private function throwUEx(): void
+    protected function throwUEx(): void
     {
         if ($this->lastErrorMsg) {
             throw new UnexpectedException($this->lastErrorMsg);

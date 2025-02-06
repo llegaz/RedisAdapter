@@ -19,12 +19,8 @@ use Predis\Response\Status;
  */
 class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
-    /** @var RedisClientInterface */
-    protected $predisClient;
+    protected RedisClientInterface $predisClient;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -55,9 +51,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         );
         $this->assertDefaultContext();
     }
-    /**
-     * @inheritdoc
-     */
+
     protected function tearDown(): void
     {
         parent::tearDown();

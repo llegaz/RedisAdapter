@@ -18,12 +18,8 @@ use LLegaz\Redis\RedisClientInterface;
  */
 class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
 {
-    /** @var RedisClientInterface */
-    protected $redisClient;
+    protected RedisClientInterface $redisClient;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         if (!in_array('redis', get_loaded_extensions())) {
@@ -71,9 +67,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         );
         $this->assertDefaultContext();
     }
-    /**
-     * @inheritdoc
-     */
+
     protected function tearDown(): void
     {
         parent::tearDown();
