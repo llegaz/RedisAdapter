@@ -1,6 +1,6 @@
 {
     "name": "llegaz/redis-adapter",
-    "description": "additional layer based on predis/predis and PHP Redis",
+    "description": "additional layer based on phpredis/phpredis and predis/predis",
     "type": "library",
     "license": "MIT",
     "authors": [
