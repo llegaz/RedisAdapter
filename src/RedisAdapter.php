@@ -9,6 +9,7 @@ use LLegaz\Redis\Exception\LocalIntegrityException;
 use LLegaz\Redis\Exception\UnexpectedException;
 use LogicException;
 use Predis\Response\Status;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -29,7 +30,7 @@ use Throwable;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisAdapter
+class RedisAdapter implements LoggerAwareInterface
 {
     /**
      * current redis client in use
@@ -420,4 +421,10 @@ class RedisAdapter
 
         return intval($this->client->client('id'));
     }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
+    }
+
 }
