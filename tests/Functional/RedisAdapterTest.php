@@ -157,7 +157,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @todo maybe rework this (can fail due to hazard LMAO)
-     * 
+     *
      * because next tests based on <code>getRedisClientID</code> need different ids
      * but Redis gives ids in a linear way : client 1 id = 1
      *                                       client 2 id = 2, and so on.

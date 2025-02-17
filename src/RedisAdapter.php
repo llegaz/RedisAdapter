@@ -9,6 +9,7 @@ use LLegaz\Redis\Exception\LocalIntegrityException;
 use LLegaz\Redis\Exception\UnexpectedException;
 use LogicException;
 use Predis\Response\Status;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -35,6 +36,8 @@ class RedisAdapter
      *
      */
     private ?RedisClientInterface $client = null;
+
+    protected ?LoggerInterface $logger;
 
     /**
      * current redis client <b>context</b> in use
@@ -65,7 +68,8 @@ class RedisAdapter
         string $scheme = RedisClientInterface::DEFAULTS['scheme'],
         int $db = RedisClientInterface::DEFAULTS['database'],
         bool $persistent = false,
-        ?RedisClientInterface $client = null
+        ?RedisClientInterface $client = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->context = [
             'host' => $host,
