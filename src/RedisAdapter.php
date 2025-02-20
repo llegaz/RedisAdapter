@@ -317,7 +317,7 @@ class RedisAdapter
      *
      * @param Throwable $t
      */
-    private function formatException(Throwable $t): void
+    protected function formatException(Throwable $t): void
     {
         $debug = '';
         if (defined('LLEGAZ_DEBUG')) {
