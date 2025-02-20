@@ -100,7 +100,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $this->predisClient->expects($this->once())
             ->method('ping')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
         $this->expectException(ConnectionLostException::class);
         $this->redisAdapter->selectDatabase(42);
@@ -113,7 +113,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $this->predisClient->expects($this->once())
             ->method('select')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
         $this->expectException(UnexpectedException::class);
         $this->redisAdapter->selectDatabase(42);
@@ -135,7 +135,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $this->predisClient->expects($this->once())
             ->method('ping')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
         $this->expectException(ConnectionLostException::class);
         $this->redisAdapter->clientList();
@@ -149,7 +149,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         $this->predisClient->expects($this->once())
             ->method('client')
             ->with('list')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
         $this->expectException(UnexpectedException::class);
         $this->redisAdapter->clientList();
@@ -199,7 +199,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         $this->predisClient->expects($this->once())
             ->method('client')
             ->with('list')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
         $this->assertFalse($this->redisAdapter->checkIntegrity());
     }
