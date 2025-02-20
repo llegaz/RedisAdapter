@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+namespace LLegaz\Redis\Logger;
+
+use Psr\Log\AbstractLogger;
 use Symfony\Component\VarDumper\VarDumper;
 use Throwable;
 
@@ -10,7 +13,7 @@ use Throwable;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class DebugLogger extends Psr\Log\AbstractLogger
+class DebugLogger extends AbstractLogger
 {
     public function log($level, string|\Stringable $message, mixed $context = []): void
     {

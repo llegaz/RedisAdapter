@@ -119,7 +119,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $this->redisClient->expects($this->once())
             ->method('ping')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
 
         $this->expectException(ConnectionLostException::class);
@@ -133,7 +133,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $this->redisClient->expects($this->once())
             ->method('select')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
 
         $this->expectException(UnexpectedException::class);
@@ -156,7 +156,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $this->redisClient->expects($this->once())
             ->method('ping')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
 
         $this->expectException(ConnectionLostException::class);
@@ -171,7 +171,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
 
         $this->expectException(UnexpectedException::class);
@@ -223,7 +223,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
-            ->willThrowException(new \Exception())
+            ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
         $this->assertFalse($this->redisAdapter->checkIntegrity());
     }

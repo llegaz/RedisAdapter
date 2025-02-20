@@ -7,6 +7,7 @@ namespace LLegaz\Redis;
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\LocalIntegrityException;
 use LLegaz\Redis\Exception\UnexpectedException;
+use LLegaz\Redis\Logger\DebugLogger;
 use LogicException;
 use Predis\Response\Status;
 use Psr\Log\LoggerAwareInterface;
@@ -38,7 +39,7 @@ class RedisAdapter implements LoggerAwareInterface
      */
     private ?RedisClientInterface $client = null;
 
-    protected ?LoggerInterface $logger;
+    protected ?LoggerInterface $logger = null;
 
     /**
      * current redis client <b>context</b> in use
@@ -52,14 +53,14 @@ class RedisAdapter implements LoggerAwareInterface
 
     /**
      *
-     * @todo add a logger interface to the class, see to format/log exceptions externally of this class
-     *
      * @param string $host
      * @param int $port
      * @param string|null $pwd
      * @param string $scheme
      * @param int $db
+     * @param bool $persistent
      * @param RedisClientInterface|null $client
+     * @param LoggerInterface|null $logger
      * @throws LocalIntegrityException
      */
     public function __construct(
@@ -98,6 +99,11 @@ class RedisAdapter implements LoggerAwareInterface
                 $this->throwLIEx();
             }
 
+        }
+        if ($logger) {
+            $this->logger = $logger;
+        } elseif (defined('LLEGAZ_DEBUG') && LLEGAZ_DEBUG) {
+            $this->logger = new DebugLogger();
         }
     }
 
@@ -236,8 +242,9 @@ class RedisAdapter implements LoggerAwareInterface
             }
         } catch (ConnectionLostException $cle) {
             throw $cle;
+        } catch (LogicException $le) {
+            $this->formatException($le);
         } catch (Throwable $e) {
-            $this->formatException($e);
 
             return false;
         }
@@ -319,16 +326,22 @@ class RedisAdapter implements LoggerAwareInterface
     }
 
     /**
+     *@todo - maybe rework this
      *
      * @param Throwable $t
      */
     protected function formatException(Throwable $t): void
     {
         $debug = '';
-        if (defined('LLEGAZ_DEBUG')) {
+        if (defined('LLEGAZ_DEBUG') && LLEGAZ_DEBUG) {
             $debug = PHP_EOL . $t->getTraceAsString();
         }
         $this->lastErrorMsg = $t->getMessage() . $debug . PHP_EOL;
+
+        if ($this->logger) {
+            $this->logger->log('Error', $t->getMessage(), $t->getTraceAsString());
+            //$this->logger->error($t->getMessage(), $t->getTrace());
+        }
     }
 
     /**
