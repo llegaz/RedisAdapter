@@ -55,6 +55,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     protected function tearDown(): void
     {
         parent::tearDown();
+        unset($this->predisClient);
     }
 
     public function testDummy()

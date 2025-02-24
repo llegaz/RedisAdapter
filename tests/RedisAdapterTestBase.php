@@ -35,7 +35,6 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
      */
     protected function tearDown(): void
     {
-        unset($this->client);
         unset($this->redisAdapter);
     }
 
