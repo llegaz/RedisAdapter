@@ -419,6 +419,12 @@ class RedisAdapter implements LoggerAwareInterface
         return spl_object_hash($this->client);
     }
 
+    public function __toString(): string
+    {
+        // return print_r($this, true); // a bit overkill
+        return get_class($this) . ' - ' . $this->getID();
+    }
+
     /**
      * fetch id managed by remote Redis server for the ongoing <b>connection</b>
      * (and thus client used here).
