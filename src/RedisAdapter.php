@@ -52,6 +52,13 @@ class RedisAdapter implements LoggerAwareInterface
     private ?float $lastPing = null;
 
     /**
+     * Do we check for database integrity ? default = always
+     *
+     * @var bool
+     */
+    protected bool $paranoid = true;
+
+    /**
      *
      * @param string $host
      * @param int $port
@@ -234,6 +241,12 @@ class RedisAdapter implements LoggerAwareInterface
      */
     public function checkIntegrity(): bool
     {
+        // performance hack
+        if (!$this->amiParanoid()) {
+
+            return true;
+        }
+
         // check if database is well synced from upon instance context and corresponding redis client singleton
         try {
             if (!$this->checkRedisClientDB()) {
@@ -446,4 +459,23 @@ class RedisAdapter implements LoggerAwareInterface
         $this->logger = $logger;
     }
 
+    /**
+     * Do we check for database integrity ? default = always
+     *
+     * you can disable all those integrity checks for performance purpose (at your own risks)
+     *
+     * @param bool $paranoid
+     * @return self
+     */
+    public function setParanoid(bool $paranoid = true): self
+    {
+        $this->paranoid = $paranoid;
+
+        return $this;
+    }
+
+    private function amiParanoid(): bool
+    {
+        return $this->paranoid ? RedisClientsPool::getOracle($this->context) > 1 : false;
+    }
 }

@@ -62,9 +62,10 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
             null,
             RedisClientInterface::DEFAULTS['scheme'],
             RedisClientInterface::DEFAULTS['database'],
-            false,
+            RedisClientInterface::DEFAULTS['persistent'],
             $this->redisClient
         );
+        \LLegaz\Redis\RedisClientsPool::setOracle($this->defaults);
         $this->assertDefaultContext();
     }
 

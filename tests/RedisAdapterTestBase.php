@@ -15,7 +15,7 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     /** @var RedisAdapter */
     protected SUT $redisAdapter;
 
-    private array $defaults = [];
+    protected array $defaults = [];
 
     public static function setUpBeforeClass(): void
     {
@@ -27,7 +27,7 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
-        $this->defaults = array_merge(RedisClientInterface::DEFAULTS, ['client_id' => '1337']);
+        $this->defaults = array_merge(RedisClientInterface::DEFAULTS, ['client_id' => 1337]);
     }
 
     /**

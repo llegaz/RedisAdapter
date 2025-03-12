@@ -23,6 +23,14 @@ class RedisClientsPool
     private static array $clients = [];
 
     /**
+     * aims to prevent unneeded integrity checks
+     * (in case of unique redis connection client used in a sole concrete class)
+     *
+     * @var map
+     */
+    private static array $oracle = [];
+
+    /**
      *
      * @var bool
      */
@@ -66,9 +74,7 @@ class RedisClientsPool
      */
     public static function getClient(array $conf): RedisClientInterface
     {
-        $arrKey = $conf;
-        unset($arrKey['database']);
-        $md5 = md5(serialize($arrKey));
+        $md5 = self::getMDHash($conf);
         if (in_array($md5, array_keys(self::$clients))) {
             // get the client back
             $redis = self::$clients[$md5];
@@ -91,11 +97,52 @@ class RedisClientsPool
         }
 
         if ($redis instanceof RedisClientInterface) {
+            if (!isset(self::$oracle[$md5])) {
+                self::$oracle[$md5] = 0;
+            }
+            self::$oracle[$md5]++;
 
             return $redis;
         }
 
         throw new ConnectionLostException('Predis client was not instanciated correctly' . PHP_EOL, 500);
+    }
+
+    /**
+     * the oracle is keeping count of the number of time a client has been accessed
+     * if it is accessed only once the concrete class using it can be assured she is
+     * the only one changing its context (primarily used to sync the right db)
+     *
+     * @param array $conf
+     * @return int
+     */
+    public static function getOracle(array $conf): int
+    {
+        $md5 = self::getMDHash($conf);
+
+        return self::$oracle[$md5]; // should be set (always ?)
+    }
+
+    /**
+     * Units purpose
+     *
+     * @param array $conf
+     * @return void
+     */
+    public static function setOracle(array $conf): void
+    {
+        $md5 = self::getMDHash($conf);
+
+        self::$oracle[$md5] = 9; // hack again for units' sake :/
+    }
+
+    private static function getMDHash(array $conf): string
+    {
+        $arrKey = $conf;
+        unset($arrKey['database']);
+        unset($arrKey['client_id']);
+
+        return md5(serialize($arrKey));
     }
 
     public static function clientCount(): int
