@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-require_once '../../vendor/autoload.php';
+/**
+ * @author Laurent LEGAZ <laurent@legaz.eu>
+ */
+require_once realpath(__DIR__ . '/../../') . '/vendor/autoload.php';
 
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientsPool;
