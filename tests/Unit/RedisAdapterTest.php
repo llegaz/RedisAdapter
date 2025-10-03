@@ -6,6 +6,7 @@ namespace LLegaz\Redis\Tests\Unit;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\Exception\UnexpectedException;
+use LLegaz\Redis\Logger\NullLogger;
 use LLegaz\Redis\PredisClient;
 use LLegaz\Redis\RedisAdapter as SUT;
 use LLegaz\Redis\RedisClientInterface;
@@ -47,10 +48,16 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
             RedisClientInterface::DEFAULTS['scheme'],
             RedisClientInterface::DEFAULTS['database'],
             RedisClientInterface::DEFAULTS['persistent'],
-            $this->predisClient
+            $this->predisClient,
+            new NullLogger()
         );
         \LLegaz\Redis\RedisClientsPool::setOracle($this->defaults);
         $this->assertDefaultContext();
+
+        // if our class is not in paranoid mode the calls flow isn't the same
+        if (!$this->redisAdapter->amiParanoid()) {
+            $this->OneLessCall = 1;
+        }
     }
 
     protected function tearDown(): void
@@ -165,7 +172,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
     {
         $a = [];
         $this->assertEquals(1, array_push($a, ['id' => 1337, 'db' => 0, 'cmd' => 'client']));
-        $this->predisClient->expects($this->exactly(2))
+        $this->predisClient->expects($this->exactly(2 - $this->OneLessCall))
             ->method('client')
             ->with('list')
             ->willReturn($a)
@@ -184,7 +191,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
                 ->willReturn(new Status('OK'))
         ;
         $this->assertTrue($this->redisAdapter->selectDatabase(10));
-        $this->predisClient->expects($this->once())
+        $this->predisClient->expects($this->exactly(1 - $this->OneLessCall))
             ->method('client')
             ->with('list')
             ->willReturn($a)
@@ -198,11 +205,15 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
      */
     public function testCheckIntegrityException()
     {
-        $this->predisClient->expects($this->once())
+        $this->predisClient->expects($this->exactly(1 - $this->OneLessCall))
             ->method('client')
             ->with('list')
             ->willThrowException(new \Exception('Tests suite\'s Exception'))
         ;
-        $this->assertFalse($this->redisAdapter->checkIntegrity());
+        if ($this->redisAdapter->amiParanoid()) {
+            $this->assertFalse($this->redisAdapter->checkIntegrity());
+        } else {
+            $this->assertTrue($this->redisAdapter->checkIntegrity());
+        }
     }
 }
