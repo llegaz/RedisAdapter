@@ -21,12 +21,12 @@ composer require llegaz/redis-adapter
 composer install
 ```
 ### env
-In order to work this need php8 and some classical php extensions plus a **local redis server** (for testing purpose) and **docker to test multiples instances of redis servers**.
+In order to work we need php8 and some classical php extensions plus a **local redis server** (for testing purpose) and **docker to test multiples instances of redis servers**.
 ```bash
 apt install php8.1 php8.1-cli php8.1-common php8.1-mbstring php8.1-opcache
 ```
 
-and perhaps other packages are required for composer to work smoothly
+and perhaps other packages may be required for composer to work smoothly
 ```bash
 apt install php8.1-xml php8.1-http php8.1-dom
 ```

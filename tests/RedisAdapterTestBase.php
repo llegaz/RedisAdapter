@@ -17,6 +17,9 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 
     protected array $defaults = [];
 
+    // if our class is not in paranoid mode the calls flow isn't the same
+    protected int $OneLessCall = 0;
+
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
@@ -46,5 +49,20 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     protected function assertNotDefaultContext()
     {
         $this->assertNotEquals($this->defaults, $this->redisAdapter->getContext());
+    }
+
+    /**
+     * Client List call expectation for paranoid mode (integrity check are mandatory
+     * because multiple access to redis clients pool are simulated through units)
+     *
+     */
+    protected function integrityCheckCL()
+    {
+        // if our class is not in paranoid mode the calls flow isn't the same
+        $this->predisClient->expects($this->redisAdapter->amiParanoid() ? $this->once() : $this->never())
+            ->method('client')
+            ->with('list')
+            ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
+        ;
     }
 }

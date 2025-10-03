@@ -131,6 +131,12 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             foreach (self::DOCKERS as $cnfg) {
                 $cnfg['database'] = $i;
                 $this->redisAdapter = SUT::createRedisAdapter($cnfg);
+                /***
+                 * @warning if you are not in paranoid mode (default mode) you have to handle your db switch by yourself
+                 */
+                if (!$this->redisAdapter->amiParanoid()) {
+                    $this->redisAdapter->selectDatabase($i);
+                }
                 $remoteDB = $this->redisAdapter->getClientCtxtFromRemote()['db'];
                 $this->assertRemote($this->redisAdapter, $remoteDB);
                 $this->assertEquals($i, intval($remoteDB));
@@ -228,8 +234,16 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($this->redisAdapter->getRedisClientID(), $test->getRedisClientID());
         $this->assertEquals(1, RedisClientsPool::clientCount()); // 1 client to rule them all
 
+        /***
+          * @warning if you are not in paranoid mode (default mode) you have to handle your db switch by yourself
+          */
+        if ($test->amiParanoid()) {
+            $this->assertTrue($test->checkIntegrity());
+        } else {
+            $test->selectDatabase(4); // yeah I know it sucks :p
+        }
+
         // sugar..
-        $this->assertTrue($test->checkIntegrity());
         $this->assertTrue($test->checkRedisClientDB());
         $this->assertEquals(4, $test->getClientCtxtFromRemote()['db']);
     }
@@ -490,12 +504,15 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     private function checkLocal(SUT $a): void
     {
-        $local = $a->getContext()['database'];
-        $remote = $a->getClientCtxtFromRemote()['db'];
-        $this->assertIsInt($local);
-        $this->assertRemote($a, $remote);
-        $this->assertTrue($local === intval($remote));
-        $this->assertTrue($a->checkRedisClientDB($remote));
+        // all these tests only have sense if in a consistent enforced context
+        if ($a->amiParanoid()) {
+            $local = $a->getContext()['database'];
+            $remote = $a->getClientCtxtFromRemote()['db'];
+            $this->assertIsInt($local);
+            $this->assertRemote($a, $remote);
+            $this->assertTrue($local === intval($remote));
+            $this->assertTrue($a->checkRedisClientDB($remote));
+        }
     }
 
     private function assertRemote(SUT $sut, $remote): void

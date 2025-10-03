@@ -474,7 +474,7 @@ class RedisAdapter implements LoggerAwareInterface
         return $this;
     }
 
-    private function amiParanoid(): bool
+    public function amiParanoid(): bool
     {
         return $this->paranoid ? RedisClientsPool::getOracle($this->context) > 1 : false;
     }
