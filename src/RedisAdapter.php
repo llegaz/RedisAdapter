@@ -191,12 +191,12 @@ class RedisAdapter implements LoggerAwareInterface
     {
         $ping = false;
 
-        // simulate predis delayed connection
-        if (!$this->client->isConnected() && !$this->client->launchConnection()) {
-            return false;
-        }
-
         try {
+            // simulate predis delayed connection
+            if (!$this->client->isConnected() && !$this->client->launchConnection()) {
+
+                return false;
+            }
             $newPing = microtime(true);
             if (!$this->lastPing || (0.45 - ($newPing - $this->lastPing)) < 0) {
                 $ping = $this->client->ping();
@@ -400,6 +400,8 @@ class RedisAdapter implements LoggerAwareInterface
 
     /**
      * Redis client getter
+     *
+     * @todo protect this (and find a little workaround for the tests)
      *
      * @return RedisClientInterface
      */

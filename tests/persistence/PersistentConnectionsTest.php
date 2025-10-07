@@ -18,6 +18,7 @@ pcntl_signal(SIGINT, 'shutdown');
 pcntl_signal(SIGQUIT, 'shutdown');
 pcntl_signal(SIGTSTP, 'shutdown');
 $children = [];
+
 function shutdown()
 {
     global $children;
