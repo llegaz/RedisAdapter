@@ -459,7 +459,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @expectedException LLegaz\Predis\Exception\ConnectionLostException
+     * @expectedException LLegaz\Redis\Exception\ConnectionLostException
      */
     public function testClientInvokationWithAuthException(): ?SUT
     {

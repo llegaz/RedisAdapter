@@ -80,6 +80,11 @@ class RedisAdapter implements LoggerAwareInterface
         ?RedisClientInterface $client = null,
         ?LoggerInterface $logger = null
     ) {
+        if ($logger) {
+            $this->logger = $logger;
+        } elseif (defined('LLEGAZ_DEBUG') && LLEGAZ_DEBUG) {
+            $this->logger = new DebugLogger();
+        }
         $this->context = [
             'host' => $host,
             'port' => $port,
@@ -101,16 +106,21 @@ class RedisAdapter implements LoggerAwareInterface
         } else {
             RedisClientsPool::init();
             $this->client = RedisClientsPool::getClient($this->context);
-            $this->context['client_id'] = $this->getRedisClientID();
+
+            /****
+             * @todo rework here (exception handling + on wrong creds authentication : mb introduce new exception class)
+             *       uncomment below to start investigate this problem..
+             */
+            //try {
+                $this->context['client_id'] = $this->getRedisClientID();
+            /*} catch (Throwable $t) {
+                $this->formatException($t);
+            }*/
+
             if (!$this->checkIntegrity()) {
                 $this->throwLIEx();
             }
 
-        }
-        if ($logger) {
-            $this->logger = $logger;
-        } elseif (defined('LLEGAZ_DEBUG') && LLEGAZ_DEBUG) {
-            $this->logger = new DebugLogger();
         }
     }
 
@@ -191,12 +201,13 @@ class RedisAdapter implements LoggerAwareInterface
     {
         $ping = false;
 
-        try {
-            // simulate predis delayed connection
-            if (!$this->client->isConnected() && !$this->client->launchConnection()) {
+        // simulate predis delayed connection
+        if (!$this->client->isConnected() && !$this->client->launchConnection()) {
 
-                return false;
-            }
+            return false;
+        }
+
+        try {
             $newPing = microtime(true);
             if (!$this->lastPing || (0.45 - ($newPing - $this->lastPing)) < 0) {
                 $ping = $this->client->ping();
