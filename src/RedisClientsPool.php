@@ -84,6 +84,22 @@ class RedisClientsPool
                 $conf['persistent'] = (string) $conf['persistent'];
             }
 
+            /***
+             * CRITICAL: We use include_once instead of autoload to prevent fatal errors.
+             *
+             * RedisClient extends \Redis, which only exists when the redis extension
+             * is loaded. If PHP's parser tries to load the class definition when the
+             * extension is NOT loaded, it will throw a FATAL ERROR.
+             *
+             * By using include_once conditionally, we ensure the class is only parsed
+             * when we know \Redis exists.
+             *
+             * Alternative considered: composition instead of inheritance, but this
+             * would lose type safety and add overhead via __call().
+             *
+             * Also, note that we use a strategy pattern here and a fall back on PredisClient
+             * if php-redis extension isn't available.
+             */
             if (self::$isRedis) {
                 include_once 'RedisClient.php';
                 $redis = new RedisClient($conf);

@@ -8,6 +8,8 @@ use LLegaz\Redis\Exception\ConnectionLostException;
 use Predis\Client;
 
 /**
+ * @todo maybe we could / should unify returns system here with facade / adapter like mechanism ?
+ *      (I need help with all those pattern I mix everything..)
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -29,6 +31,7 @@ class PredisClient extends Client implements RedisClientInterface
     }
 
     /**
+     * @todo refacto here 
      *
      * @return bool
      */
@@ -38,8 +41,12 @@ class PredisClient extends Client implements RedisClientInterface
         if (!$c) {
             return false;
         }
+        dump($c->getParameters()->toArray());
         $p = $c->getParameters()->toArray()['persistent'];
 
+        /**
+         * @todo this doesn't look good
+         */
         return (is_string($p) && strlen($p));
     }
 
@@ -47,4 +54,8 @@ class PredisClient extends Client implements RedisClientInterface
     {
         return self::PREDIS;
     }
+    
+    /**
+     * @todo check facade mset
+     */
 }

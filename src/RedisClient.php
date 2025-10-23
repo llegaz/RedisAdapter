@@ -6,6 +6,9 @@ namespace LLegaz\Redis;
 
 /**
  * PHP Redis Adapter
+ * 
+ * @todo maybe we could / should unify returns system here with facade / adapter like mechanism ?
+ *      (I need help with all those pattern I mix everything..)
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -77,4 +80,8 @@ class RedisClient extends \Redis implements RedisClientInterface
     {
         return self::PHP_REDIS;
     }
+
+    /**
+     * @todo check facade mset
+     */
 }
