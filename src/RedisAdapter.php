@@ -19,6 +19,7 @@ use Throwable;
  * (see <a href="https://martinfowler.com/articles/gateway-pattern.html">Martin Fowler, Gateway Pattern</a>).
  * @link https://martinfowler.com/articles/gateway-pattern.html
  *
+ * 
  * The goal here is to adapt use of either Predis client or native PHP Redis client in a transparently way.
  * Those are the real adaptees, their respective classes are extended to adapt them for this class, the gateway
  * to encapsulate one of them and use one or the other indifferently depending on environment.
