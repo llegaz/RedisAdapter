@@ -25,7 +25,7 @@ class RedisClientsPool
     /**
      * aims to prevent unneeded integrity checks
      * (in case of unique redis connection client used in a sole concrete class)
-     * 
+     *
      * @todo maybe rename oracle to refCount or referenceCount
      *
      * @var map
