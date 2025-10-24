@@ -488,6 +488,14 @@ class RedisAdapter implements LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * if we are the only concrete class (adapter, cache, whatever) using this redis client
+     * (that is to say RedisClientsPool::getOracle($this->context) = 1) then we can be assured
+     * that our previously set, selected database didn't change and that we are in the right 
+     * <b>key / value space</b>.
+     * 
+     * @return bool
+     */
     public function amiParanoid(): bool
     {
         return $this->paranoid ? RedisClientsPool::getOracle($this->context) > 1 : false;
