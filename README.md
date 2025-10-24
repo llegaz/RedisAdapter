@@ -12,7 +12,9 @@ that will encapsulate one of them (as a redis client) and use one or the other i
 It will use preferably [PHP Redis](https://github.com/phpredis/phpredis/) if available (extension installed), or else fallback on [predis](https://github.com/predis/predis).
 
 
-This class settles base for other projects based on it (PSR-6 Cache and so on)
+This class settles base for other projects based on it (PSR-6 and PSR-16 Cache systems and so on)
+
+![Redis Adapter project class diagram](./devtools/classes_diagram.png)
 
 
 ## Install

@@ -31,21 +31,25 @@ class PredisClient extends Client implements RedisClientInterface
     }
 
     /**
-     * @todo refacto here 
      *
      * @return bool
      */
     public function isPersistent(): bool
     {
         $c = $this->getConnection();
-        if (!$c) {
-            return false;
+        $p = null;
+
+        if ($c && $c->getParameters()) {
+            $params = $c->getParameters()->toArray();
+            if (isset($params['persistent'])) {
+                $p = $params['persistent'];
+            }
         }
-        dump($c->getParameters()->toArray());
-        $p = $c->getParameters()->toArray()['persistent'];
 
         /**
-         * @todo this doesn't look good
+         * persistent connection are given a name (like $p = 'persistent_2')
+         * if the string is set then it is a named persistent connection within
+         * Predis parameters
          */
         return (is_string($p) && strlen($p));
     }
