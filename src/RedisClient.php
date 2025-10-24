@@ -6,7 +6,7 @@ namespace LLegaz\Redis;
 
 /**
  * PHP Redis Adapter
- * 
+ *
  * @todo maybe we could / should unify returns system here with facade / adapter like mechanism ?
  *      (I need help with all those pattern I mix everything..)
  *
