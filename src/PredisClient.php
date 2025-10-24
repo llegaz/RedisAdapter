@@ -25,6 +25,12 @@ class PredisClient extends Client implements RedisClientInterface
         return true;
     }
 
+    /**
+     * this should not be called in theory...
+     *
+     * @return void
+     * @throws ConnectionLostException
+     */
     public function launchConnection(): void
     {
         throw new ConnectionLostException();
@@ -58,7 +64,7 @@ class PredisClient extends Client implements RedisClientInterface
     {
         return self::PREDIS;
     }
-    
+
     /**
      * @todo check facade mset
      */
