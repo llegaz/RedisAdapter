@@ -10,7 +10,7 @@ use LLegaz\Redis\RedisClientInterface;
 /**
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
+abstract class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
 {
     /** @var RedisAdapter */
     protected SUT $redisAdapter;
@@ -59,10 +59,12 @@ class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
     protected function integrityCheckCL()
     {
         // if our class is not in paranoid mode the calls flow isn't the same
-        $this->predisClient->expects($this->redisAdapter->amiParanoid() ? $this->once() : $this->never())
+        $this->getSelfClient()->expects($this->redisAdapter->amiParanoid() ? $this->once() : $this->never())
             ->method('client')
             ->with('list')
             ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
         ;
     }
+
+    abstract protected function getSelfClient();
 }

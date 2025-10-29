@@ -86,8 +86,8 @@ class RedisClientsPool
                 $conf['persistent'] = (string) $conf['persistent'];
             }
 
-            /***
-             * CRITICAL: We use include_once instead of autoload to prevent fatal errors.
+            /**
+             * <b>CRITICAL</b>: We use include_once instead of auto-load to prevent fatal errors.
              *
              * RedisClient extends \Redis, which only exists when the redis extension
              * is loaded. If PHP's parser tries to load the class definition when the
