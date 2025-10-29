@@ -11,6 +11,7 @@ use LLegaz\Redis\PredisClient;
 use LLegaz\Redis\RedisAdapter as SUT;
 use LLegaz\Redis\RedisClientInterface;
 use Predis\Response\Status;
+use LLegaz\Redis\Tests\TestState;
 
 /**
  * Units using predis client
@@ -57,6 +58,11 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         // if our class is not in paranoid mode the calls flow isn't the same
         if (!$this->redisAdapter->amiParanoid()) {
             $this->OneLessCall = 1;
+        }
+
+        if (!TestState::$adapterClassDisplayed) {
+            TestState::$adapterClassDisplayed = true;
+            dump($this->redisAdapter->getRedis()->toString() . ' adapter used.');
         }
     }
 
