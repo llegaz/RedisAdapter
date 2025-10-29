@@ -218,6 +218,9 @@ class RedisAdapter implements LoggerAwareInterface
                 $ping = true;
             }
         } catch (Throwable $e) {
+            /**
+             * php-redis never goes here if clients aren't properly connected (but predis does)
+             */
             $this->formatException($e);
         } finally {
             if ($ping instanceof Status) {

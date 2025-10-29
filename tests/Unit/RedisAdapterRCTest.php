@@ -10,6 +10,7 @@ use LLegaz\Redis\Logger\NullLogger;
 use LLegaz\Redis\RedisAdapter as SUT;
 use LLegaz\Redis\RedisClient;
 use LLegaz\Redis\RedisClientInterface;
+use LLegaz\Redis\Tests\TestState;
 
 /**
  * RC = Redis client instead of predis
@@ -73,6 +74,11 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         // if our class is not in paranoid mode the calls flow isn't the same
         if (!$this->redisAdapter->amiParanoid()) {
             $this->OneLessCall = 1;
+        }
+
+        if (!TestState::$adapterClassDisplayed) {
+            TestState::$adapterClassDisplayed = true;
+            dump($this->redisAdapter->getRedis()->toString() . ' adapter used.');
         }
     }
 

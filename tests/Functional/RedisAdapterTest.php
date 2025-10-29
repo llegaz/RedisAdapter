@@ -8,6 +8,7 @@ use LLegaz\Redis\Exception\ConnectionLostException;
 use LLegaz\Redis\RedisAdapter as SUT;
 use LLegaz\Redis\RedisClientInterface;
 use LLegaz\Redis\RedisClientsPool;
+use LLegaz\Redis\Tests\TestState;
 
 if (!defined('SKIP_FUNCTIONAL_TESTS')) {
     define('SKIP_FUNCTIONAL_TESTS', true);
@@ -77,6 +78,10 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         // clear singletons pool
         RedisClientsPool::destruct();
         $this->redisAdapter = new SUT();
+        if (!TestState::$adapterClassDisplayed) {
+            TestState::$adapterClassDisplayed = true;
+            dump($this->redisAdapter->getRedis()->toString() . ' adapter used.');
+        }
         /**
          * retrieve initial clients count, resulting expected count will be calculated from it
          * (hazardous)
