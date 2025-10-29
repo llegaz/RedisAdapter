@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LLegaz\Cache\Tests;
+namespace LLegaz\Redis\Tests;
 
 /**
  * Static Class Property: used to spread variables across non isolated tests processes

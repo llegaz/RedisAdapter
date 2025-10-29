@@ -123,7 +123,7 @@ class RedisClientsPool
             return $redis;
         }
 
-        throw new ConnectionLostException('Predis client was not instanciated correctly' . PHP_EOL, 500);
+        throw new ConnectionLostException('(P)Redis client was not instanciated correctly' . PHP_EOL, 500);
     }
 
     /**
