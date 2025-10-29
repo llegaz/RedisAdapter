@@ -216,4 +216,10 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
             $this->assertTrue($this->redisAdapter->checkIntegrity());
         }
     }
+
+    protected function getSelfClient()
+    {
+        return $this->predisClient;
+    }
+
 }
