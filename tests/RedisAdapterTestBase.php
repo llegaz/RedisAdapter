@@ -66,5 +66,5 @@ abstract class RedisAdapterTestBase extends \PHPUnit\Framework\TestCase
         ;
     }
 
-    abstract protected function getSelfClient();
+    abstract protected function getSelfClient(): RedisClientInterface;
 }
