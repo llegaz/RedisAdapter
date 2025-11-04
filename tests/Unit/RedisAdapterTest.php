@@ -10,8 +10,8 @@ use LLegaz\Redis\Logger\NullLogger;
 use LLegaz\Redis\PredisClient;
 use LLegaz\Redis\RedisAdapter as SUT;
 use LLegaz\Redis\RedisClientInterface;
-use Predis\Response\Status;
 use LLegaz\Redis\Tests\TestState;
+use Predis\Response\Status;
 
 /**
  * Units using predis client
@@ -223,7 +223,7 @@ class RedisAdapterTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         }
     }
 
-    protected function getSelfClient()
+    protected function getSelfClient(): RedisClientInterface
     {
         return $this->predisClient;
     }

@@ -247,7 +247,7 @@ class RedisAdapterRCTest extends \LLegaz\Redis\Tests\RedisAdapterTestBase
         }
     }
 
-    protected function getSelfClient()
+    protected function getSelfClient(): RedisClientInterface
     {
         return $this->redisClient;
     }

@@ -15,6 +15,6 @@ class NullLogger extends AbstractLogger
 {
     public function log($level, string|\Stringable $message, mixed $context = []): void
     {
-         // do nothing
+        // do nothing
     }
 }
