@@ -1,4 +1,9 @@
 <?php
+/**
+ * simple CS rules
+ *
+ * @author Laurent LEGAZ <laurent@legaz.eu>
+ */
 $finder = PhpCsFixer\Finder::create()
     ->files()
     ->in('src')

@@ -65,6 +65,11 @@ class PredisClient extends Client implements RedisClientInterface
         return self::PREDIS;
     }
 
+    public function __toString(): string
+    {
+        return self::PREDIS;
+    }
+
     /**
      * @todo check facade mset
      */

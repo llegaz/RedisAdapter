@@ -80,6 +80,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->redisAdapter = new SUT();
         if (!TestState::$adapterClassDisplayed) {
             TestState::$adapterClassDisplayed = true;
+            fwrite(STDERR, PHP_EOL);
             dump($this->redisAdapter->getRedis()->toString() . ' adapter used.');
         }
         /**
