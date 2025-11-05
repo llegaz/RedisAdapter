@@ -81,6 +81,11 @@ class RedisClient extends \Redis implements RedisClientInterface
         return self::PHP_REDIS;
     }
 
+    public function __toString(): string
+    {
+        return self::PHP_REDIS;
+    }
+
     /**
      * @todo check facade mset
      */
