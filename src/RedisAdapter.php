@@ -156,6 +156,9 @@ class RedisAdapter implements LoggerAwareInterface
         }
 
         try {
+            /**
+             * @todo handle errors ERR DB index is out of range
+             */
             $redisResponse = $this->client->select($db);
             $this->context['database'] = $db;
         } catch (Throwable $e) {

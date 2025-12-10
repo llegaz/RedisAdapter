@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LLegaz\Redis;
 
+use Redis;
+
 /**
  * PHP Redis Adapter
  *
@@ -12,7 +14,7 @@ namespace LLegaz\Redis;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisClient extends \Redis implements RedisClientInterface
+class RedisClient extends Redis implements RedisClientInterface
 {
     private bool $isConnected = false;
     private bool $isPersistent = false;
@@ -87,6 +89,27 @@ class RedisClient extends \Redis implements RedisClientInterface
     }
 
     /**
-     * @todo check facade mset
+     * @todo maybe handle TTLs in another way to have a per key TTL basis.
+     *
+     * @param array $data a key/value pairs array to store in redis
+     * @param int $ttl  Time To Live for all the associated data
+     * @return bool
      */
+    public function multipleSet(array $data, int $ttl = null): bool
+    {
+
+        $redisResponse = false;
+
+        $this->multi(Redis::PIPELINE); // begin transaction
+        $redisResponse = $this->mset($data);
+        if (!is_null($ttl) && $ttl >= 0) {
+            foreach ($data as $key => $value) {
+                $this->expire($key, $ttl);
+            }
+        }
+        $this->exec();
+
+        return $redisResponse !== false;
+    }
+
 }
