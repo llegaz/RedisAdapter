@@ -27,6 +27,14 @@ interface RedisClientInterface
     public function isConnected(): bool;
 
     /**
+     *
+     * @param array $data a key/value pairs array to store in redis
+     * @param int $ttl  Time To Live for all the associated data
+     * @return bool
+     */
+    public function multipleSet(array $data, int $ttl = null): bool;
+
+    /**
      * return if connection used is persisted at the end of the script
      *
      * @return bool

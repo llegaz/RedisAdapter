@@ -9,7 +9,7 @@ namespace LLegaz\Redis\Exception;
  */
 class UnexpectedException extends \Predis\PredisException
 {
-    public function __construct(string $message = 'Unexpected event occurs.' . PHP_EOL, int $code = 500, \Throwable $previous = null)
+    public function __construct(string $message = 'Unexpected event occured.' . PHP_EOL, int $code = 500, \Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

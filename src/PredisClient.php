@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace LLegaz\Redis;
 
 use LLegaz\Redis\Exception\ConnectionLostException;
+use LLegaz\Redis\Exception\UnexpectedException;
 use Predis\Client;
+use Predis\Response\Status;
 
 /**
  * @todo maybe we could / should unify returns system here with facade / adapter like mechanism ?
@@ -70,7 +72,44 @@ class PredisClient extends Client implements RedisClientInterface
         return self::PREDIS;
     }
 
+
     /**
-     * @todo check facade mset
+     * @todo maybe handle TTLs in another way to have a per key TTL basis.
+     *       (and rework return part ?
+     *
+     * <code>redisResponse = redisResponse->getPayload() === 'OK';</code>
+     *
+     * in order to return redisResponse?)
+     *
+     * + handle TTL, expire returns (same applu for php-redis client version)
+     *
+     * @param array $data a key/value pairs array to store in redis
+     * @param int $ttl  Time To Live for all the associated data
+     * @return bool
      */
+    public function multipleSet(array $data, int $ttl = null): bool
+    {
+        $redisResponse = false;
+        $options = [
+            'cas' => true, // Initialize with support for CAS operations
+            'retry' => 3, // Number of retries on aborted transactions, after
+                // which the client bails out with an exception.
+        ];
+        $this->transaction($options, function ($t) use ($data, $ttl, &$redisResponse) {
+            $redisResponse = $t->mset($data);
+
+            if (!is_null($ttl) && $ttl >= 0) {
+                foreach ($data as $key => $value) {
+                    $t->expire($key, $ttl);
+                }
+            }
+        });
+
+        if ($redisResponse instanceof Status) {
+            return $redisResponse->getPayload() === 'OK';
+        }
+
+        throw new UnexpectedException();
+    }
+
 }
