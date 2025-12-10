@@ -97,7 +97,6 @@ class RedisClient extends Redis implements RedisClientInterface
      */
     public function multipleSet(array $data, int $ttl = null): bool
     {
-
         $redisResponse = false;
 
         $this->multi(Redis::PIPELINE); // begin transaction
