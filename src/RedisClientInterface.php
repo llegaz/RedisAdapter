@@ -32,7 +32,7 @@ interface RedisClientInterface
      * @param int $ttl  Time To Live for all the associated data
      * @return bool
      */
-    public function multipleSet(array $data, int $ttl = null): bool;
+    public function multipleSet(array $data, ?int $ttl = null): bool;
 
     /**
      * return if connection used is persisted at the end of the script
