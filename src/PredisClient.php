@@ -64,12 +64,12 @@ class PredisClient extends Client implements RedisClientInterface
 
     public function toString(): string
     {
-        return self::PREDIS;
+        return static::PREDIS;
     }
 
     public function __toString(): string
     {
-        return self::PREDIS;
+        return static::PREDIS;
     }
 
 
@@ -87,7 +87,7 @@ class PredisClient extends Client implements RedisClientInterface
      * @param int $ttl  Time To Live for all the associated data
      * @return bool
      */
-    public function multipleSet(array $data, int $ttl = null): bool
+    public function multipleSet(array $data, ?int $ttl = null): bool
     {
         $redisResponse = false;
         $options = [
