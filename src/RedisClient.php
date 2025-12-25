@@ -32,7 +32,7 @@ class RedisClient extends Redis implements RedisClientInterface
         if (isset($conf['scheme']) && strlen($conf['scheme'])) {
             $this->con .= $conf['scheme'];
         } else {
-            $this->con .= static::DEFAULTS['scheme'];
+            $this->con .= self::DEFAULTS['scheme'];
         }
         $this->con .= '://';
         if (!isset($conf['host']) || !strlen($conf['host']) || !isset($conf['port']) || ($this->port = intval($conf['port'])) < 0) {
@@ -52,9 +52,9 @@ class RedisClient extends Redis implements RedisClientInterface
     public function launchConnection(): bool
     {
         if ($this->isPersistent) {
-            $this->isConnected = parent::pconnect($this->con, $this->port, static::TIMEOUT, $this->persistent);
+            $this->isConnected = parent::pconnect($this->con, $this->port, self::TIMEOUT, $this->persistent);
         } else {
-            $this->isConnected = parent::connect($this->con, $this->port, static::TIMEOUT);
+            $this->isConnected = parent::connect($this->con, $this->port, self::TIMEOUT);
         }
 
         if ($this->pwd) {
@@ -80,12 +80,12 @@ class RedisClient extends Redis implements RedisClientInterface
 
     public function toString(): string
     {
-        return static::PHP_REDIS;
+        return self::PHP_REDIS;
     }
 
     public function __toString(): string
     {
-        return static::PHP_REDIS;
+        return self::PHP_REDIS;
     }
 
     /**

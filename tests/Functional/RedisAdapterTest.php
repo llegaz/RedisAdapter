@@ -76,7 +76,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $this->markTestSkipped('FUNCTIONAL TESTS are skipped by default when executing Units tests only.');
         }
         // clear singletons pool
-        RedisClientsPool::destruct();
+        RedisClientsPool::cleanup();
         $this->redisAdapter = new SUT();
         if (!TestState::$adapterClassDisplayed) {
             TestState::$adapterClassDisplayed = true;
@@ -119,22 +119,22 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
 
     public function testRedisClientSwitchDBs()
     {
-        foreach (static::DOCKERS as $cnfg) {
+        foreach (self::DOCKERS as $cnfg) {
             if (isset($cnfg['port']) && isset($cnfg['password'])) {
                 $this->redisAdapter = SUT::createRedisAdapter($cnfg);
             }
-            for ($i = 0; $i < static::DB_COUNT; $i++) {
+            for ($i = 0; $i < self::DB_COUNT; $i++) {
                 $this->assertTrue($this->redisAdapter->selectDatabase($i));
                 $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
             }
         }
-        $this->assertEquals(count(static::DOCKERS), RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
     }
 
     public function testRedisClientSwitchRemotes()
     {
-        for ($i = 0; $i < static::DB_COUNT; $i++) {
-            foreach (static::DOCKERS as $cnfg) {
+        for ($i = 0; $i < self::DB_COUNT; $i++) {
+            foreach (self::DOCKERS as $cnfg) {
                 $cnfg['database'] = $i;
                 $this->redisAdapter = SUT::createRedisAdapter($cnfg);
                 /***
@@ -148,7 +148,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
                 $this->assertEquals($i, intval($remoteDB));
             }
         }
-        $this->assertEquals(count(static::DOCKERS), RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
     }
 
     /**
@@ -157,7 +157,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      */
     public function testClientInvokationConstistency()
     {
-        $cfg = static::DEFAULTS;
+        $cfg = self::DEFAULTS;
         $cfg['database'] = 3;
         $test = SUT::createRedisAdapter($cfg);
         $otherClientID = $test->getID();
@@ -177,11 +177,11 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testStupidClientInvokation()
     {
         $i = 36;
-        $cfg = static::DEFAULTS;
+        $cfg = self::DEFAULTS;
         while ($i--) {
             $j = mt_rand(1, 3);
-            $cfg['port'] = static::DOCKERS[$j]['port'];
-            $cfg['password'] = static::DOCKERS[$j]['password'];
+            $cfg['port'] = self::DOCKERS[$j]['port'];
+            $cfg['password'] = self::DOCKERS[$j]['password'];
             $cfg['database'] = $i % 16;
             $test = SUT::createRedisAdapter($cfg);
             $this->assertTrue($test->isConnected());
@@ -193,7 +193,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(1, RedisClientsPool::clientCount());
         if (gc_enabled()) {
             // make sure to clear singletons pool
-            RedisClientsPool::destruct();
+            RedisClientsPool::cleanup();
             $this->assertGreaterThanOrEqual(0, gc_collect_cycles());
             $this->assertEquals(0, RedisClientsPool::clientCount());
         }
@@ -204,7 +204,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
      */
     public function testSingleClientInvokationConsistency()
     {
-        $cfg = static::DEFAULTS;
+        $cfg = self::DEFAULTS;
         $init = [3, 3, 4,12,];
         $instances = [];
         foreach ($init as $db) {
@@ -261,9 +261,9 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testMultipleClientsInvokationConsistency()
     {
         $a = $b = [];
-        foreach (static::DOCKERS as $cfg) {
+        foreach (self::DOCKERS as $cfg) {
             if (isset($cfg['port']) && isset($cfg['password'])) {
-                $newInstance = new SUT(static::DEFAULTS['host'], $cfg['port'], $cfg['password']);
+                $newInstance = new SUT(self::DEFAULTS['host'], $cfg['port'], $cfg['password']);
                 $a[] = [$newInstance, $newInstance->getID()];
             } else {
                 $a[] = [$this->redisAdapter, $this->redisAdapter->getID()];
@@ -292,7 +292,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $this->assertEquals($sut->getID(), $testAgain->getID());
             $this->assertEquals($sut->getRedisClientID(), $testAgain->getRedisClientID());
         }
-        $this->assertEquals(count(static::DOCKERS), RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
 
         // create new clients with persistent conns
         foreach ($b as $sut) {
@@ -303,7 +303,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $this->assertNotEquals($sut->getID(), $testAgain->getID());
             $this->assertNotEquals($sut->getRedisClientID(), $testAgain->getRedisClientID());
         }
-        $this->assertEquals(count(static::DOCKERS) * 2, RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS) * 2, RedisClientsPool::clientCount());
     }
 
     /**
@@ -320,7 +320,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testRedisAdapterDBsWithMultiConnections()
     {
         $a = [];
-        foreach (static::DOCKERS as $cfg) {
+        foreach (self::DOCKERS as $cfg) {
             if (count($cfg)) {
                 $newInstance = SUT::createRedisAdapter($cfg);
                 $a[] = [$newInstance, count($newInstance->clientList())];
@@ -328,7 +328,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
                 $a[] = [$this->redisAdapter, count($this->redisAdapter->clientList())];
             }
         }
-        for ($i = 0; $i < static::DB_COUNT; $i++) {
+        for ($i = 0; $i < self::DB_COUNT; $i++) {
             foreach ($a as list($pa, $cnt)) {
                 $this->assertTrue($pa->isConnected());
                 $this->assertTrue($pa->selectDatabase($i));
@@ -342,7 +342,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
         /**
          * then add more adapter objects
          */
-        foreach (static::DOCKERS as $cfg) {
+        foreach (self::DOCKERS as $cfg) {
             if (count($cfg)) {
                 $cfg['database'] = mt_rand(1, 13);
                 $newInstance = SUT::createRedisAdapter($cfg);
@@ -399,12 +399,12 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testClientsInvokationWithPersistentConn(): array
     {
         $persistentIDs = [];
-        foreach (static::DOCKERS as $cnfg) {
+        foreach (self::DOCKERS as $cnfg) {
             $cnfg['persistent'] = true;
             $this->redisAdapter = SUT::createRedisAdapter($cnfg);
             $this->assertTrue($this->redisAdapter->checkRedisClientId());
             $pID = $this->redisAdapter->getRedisClientID();
-            for ($i = 0; $i < static::DB_COUNT; $i++) {
+            for ($i = 0; $i < self::DB_COUNT; $i++) {
                 $this->assertTrue($this->redisAdapter->selectDatabase($i));
                 $this->assertEquals($i, $this->redisAdapter->getClientCtxtFromRemote()['db']);
             }
@@ -413,7 +413,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $persistentIDs[] = $pID;
         }
         // 4 persistent clients + 1 defaulf redisAdapter instantiated on set up
-        $this->assertEquals(count(static::DOCKERS) + 1, RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS) + 1, RedisClientsPool::clientCount());
 
         return $persistentIDs;
     }
@@ -424,8 +424,8 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testClientsInvokationWithPersistentConn2(array $persistentIDs): array
     {
         // clear singletons pool
-        RedisClientsPool::destruct();
-        foreach (static::DOCKERS as $cnfg) {
+        RedisClientsPool::cleanup();
+        foreach (self::DOCKERS as $cnfg) {
             $cnfg['persistent'] = true;
             $cnfg['database'] = 13;
             $this->redisAdapter = SUT::createRedisAdapter($cnfg);
@@ -439,7 +439,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $this->assertTrue($this->redisAdapter->checkRedisClientId($pID));
         }
         // 4 persistent clients only
-        $this->assertEquals(count(static::DOCKERS), RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS), RedisClientsPool::clientCount());
 
         return $persistentIDs;
     }
@@ -450,7 +450,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testPersistentConnsAreReusedOnNextInvokation(array $persistentIDs)
     {
         $previousID = null;
-        foreach (static::DOCKERS as $cnfg) {
+        foreach (self::DOCKERS as $cnfg) {
             $cnfg['persistent'] = true;
             $this->redisAdapter = SUT::createRedisAdapter($cnfg);
             $pID = $this->redisAdapter->getRedisClientID();
@@ -461,7 +461,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $previousID = $pID;
         }
         // 4 persistent clients + 1 defaulf redisAdapter instantiated on set up
-        $this->assertEquals(count(static::DOCKERS) + 1, RedisClientsPool::clientCount());
+        $this->assertEquals(count(self::DOCKERS) + 1, RedisClientsPool::clientCount());
     }
 
     /**
