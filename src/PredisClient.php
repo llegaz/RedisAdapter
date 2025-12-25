@@ -64,12 +64,12 @@ class PredisClient extends Client implements RedisClientInterface
 
     public function toString(): string
     {
-        return static::PREDIS;
+        return self::PREDIS;
     }
 
     public function __toString(): string
     {
-        return static::PREDIS;
+        return self::PREDIS;
     }
 
 

@@ -44,26 +44,26 @@ class RedisClientsPool
      */
     private static bool $init = false;
 
-    public static function init(): void
-    {
-        if (!static::$init) {
-            register_shutdown_function('static::destruct');
-            static::$isRedis = in_array('redis', get_loaded_extensions());
-            static::$init = true;
-        }
-    }
-
-    public static function destruct(): void
+    public static function cleanup(): void
     {
         do {
-            $client = array_pop(static::$clients);
+            $client = array_pop(self::$clients);
             if ($client instanceof RedisClientInterface) {
                 if (!$client->isPersistent()) {
                     $client->disconnect();
                 }
                 unset($client);
             }
-        } while (count(static::$clients));
+        } while (count(self::$clients));
+    }
+
+    public static function init(): void
+    {
+        if (!self::$init) {
+            register_shutdown_function([self::class, 'cleanup']);
+            self::$isRedis = in_array('redis', get_loaded_extensions());
+            self::$init = true;
+        }
     }
 
     /**
@@ -77,12 +77,12 @@ class RedisClientsPool
     public static function getClient(array $conf): RedisClientInterface
     {
         $md5 = static::getMDHash($conf);
-        if (in_array($md5, array_keys(static::$clients))) {
+        if (in_array($md5, array_keys(self::$clients))) {
             // get the client back
-            $redis = static::$clients[$md5];
+            $redis = self::$clients[$md5];
         } else {
             if (isset($conf['persistent']) && $conf['persistent']) {
-                $conf['persistent'] = count(static::$clients) + 1;
+                $conf['persistent'] = count(self::$clients) + 1;
                 $conf['persistent'] = (string) $conf['persistent'];
             }
 
@@ -102,7 +102,7 @@ class RedisClientsPool
              * Also, note that we use a strategy pattern here and a fall back on PredisClient
              * if php-redis extension isn't available.
              */
-            if (static::$isRedis) {
+            if (self::$isRedis) {
                 include_once 'RedisClient.php';
                 $redis = new RedisClient($conf);
             } else {
@@ -111,14 +111,14 @@ class RedisClientsPool
 
             // delayed connection
             //$redis->connect();
-            static::$clients[$md5] = $redis;
+            self::$clients[$md5] = $redis;
         }
 
         if ($redis instanceof RedisClientInterface) {
-            if (!isset(static::$oracle[$md5])) {
-                static::$oracle[$md5] = 0;
+            if (!isset(self::$oracle[$md5])) {
+                self::$oracle[$md5] = 0;
             }
-            static::$oracle[$md5]++;
+            self::$oracle[$md5]++;
 
             return $redis;
         }
@@ -138,7 +138,7 @@ class RedisClientsPool
     {
         $md5 = static::getMDHash($conf);
 
-        return static::$oracle[$md5]; // should be set (always ?)
+        return self::$oracle[$md5]; // should be set (always ?)
     }
 
     /**
@@ -149,9 +149,9 @@ class RedisClientsPool
      */
     public static function setOracle(array $conf): void
     {
-        $md5 = static::getMDHash($conf);
+        $md5 = self::getMDHash($conf);
 
-        static::$oracle[$md5] = 9; // hack again for units' sake :/
+        self::$oracle[$md5] = 9; // hack again for units' sake :/
     }
 
     private static function getMDHash(array $conf): string
@@ -165,6 +165,6 @@ class RedisClientsPool
 
     public static function clientCount(): int
     {
-        return count(static::$clients);
+        return count(self::$clients);
     }
 }
