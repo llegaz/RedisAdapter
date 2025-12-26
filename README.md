@@ -49,5 +49,5 @@ You're welcome to propose things. I am open to criticism as long as it remains b
 Stay tuned, by following me on github, for new features using [predis](https://github.com/predis/predis) and [PHP Redis](https://github.com/phpredis/phpredis/).
 
 ---
-@see you space cowboy
+**@See** you space cowboy... 🚀
 ---
