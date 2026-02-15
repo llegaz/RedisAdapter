@@ -450,6 +450,7 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
     public function testPersistentConnsAreReusedOnNextInvokation(array $persistentIDs)
     {
         $previousID = null;
+        $previousCnfg = null;
         foreach (self::DOCKERS as $cnfg) {
             $cnfg['persistent'] = true;
             $this->redisAdapter = SUT::createRedisAdapter($cnfg);
@@ -457,23 +458,21 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
             $this->assertTrue(in_array($pID, $persistentIDs));
             if ($previousID) {
                 /**
-                 * This assertion can rarely fail when multiple test runs execute in parallel
-                 * (e.g., in separate terminals). Redis may recycle a client ID if a connection
-                 * is closed and a new one is created at nearly the same time across different
-                 * test processes. This is a test environment race condition, not a production bug.
-                 * The persistent connection pool works correctly in real-world scenarios where
-                 * each PHP process maintains its own isolated connection pool.
+                 * Rare false positive when tests run in parallel: Redis may recycle client IDs.
+                 * This is a test isolation issue, not a production bug.
                  */
                 if ($previousID === $pID) {
                     $this->markTestIncomplete(
-                        'Client ID collision detected (likely due to parallel test execution). ' .
-                        "Previous ID: {$previousID}, Current ID: {$pID}. " .
-                        'This is a test isolation issue, not a code bug.'
+                        'Client ID collision detected (parallel test execution). ' .
+                        "Client ID: {$pID} | " .
+                        "Previous config: {$previousCnfg['host']}:{$previousCnfg['port']} | " .
+                        "Current config: {$cnfg['host']}:{$cnfg['port']}"
                     );
                 }
                 $this->assertNotEquals($previousID, $pID);
             }
             $previousID = $pID;
+            $previousCnfg = $cnfg;
         }
         // 4 persistent clients + 1 default redisAdapter instantiated on set up
         $this->assertEquals(count(self::DOCKERS) + 1, RedisClientsPool::clientCount());
