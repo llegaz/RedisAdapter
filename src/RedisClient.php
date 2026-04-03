@@ -114,9 +114,22 @@ class RedisClient extends Redis implements RedisClientInterface
     /**
     * @param string $key
     * @param int $ttl
-    */
-    public function expire($key, $ttl): int|bool {
+     * @return int|bool
+     */
+    public function expire($key, $ttl): int|bool
+    {
         return parent::expire($key, $ttl);
     }
 
+    /**
+    * @param string $key
+    * @param string $field
+     * @return string|null|false
+     */
+    public function hget($key, $field): ?string
+    {
+        $result = parent::hget($key, $field);
+
+        return $result === false ? null : $result;
+    }
 }

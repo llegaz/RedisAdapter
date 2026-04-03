@@ -116,7 +116,18 @@ class PredisClient extends Client implements RedisClientInterface
     * @param string $key
     * @param int $ttl
     */
-    public function expire($key, $ttl): int|bool {
+    public function expire($key, $ttl): int|bool
+    {
         return parent::expire($key, $ttl);
+    }
+
+    /**
+    * @param string $key
+    * @param string $field
+     * @return string|null|false
+     */
+    public function hget($key, $field): ?string
+    {
+        return parent::hget($key, $field);
     }
 }

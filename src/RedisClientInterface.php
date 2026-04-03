@@ -49,6 +49,14 @@ interface RedisClientInterface
     /**
     * @param string $key
     * @param int $ttl
-    */
+     * @return int|bool
+     */
     public function expire($key, $ttl): int|bool;
+
+    /**
+    * @param string $key
+    * @param string $field
+     * @return string|null|false
+     */
+    public function hget($key, $field): string|null|false;
 }
