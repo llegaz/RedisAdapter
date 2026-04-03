@@ -59,4 +59,13 @@ interface RedisClientInterface
      * @return string|null|false
      */
     public function hget($key, $field): string|null|false;
+
+        /**
+    * @param string $key
+    * @param string $fields
+     * @return array|false
+     */
+    public function hmget($key, $fields): array|false;
+
+
 }

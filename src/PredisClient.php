@@ -130,4 +130,14 @@ class PredisClient extends Client implements RedisClientInterface
     {
         return parent::hget($key, $field);
     }
+    
+    /**
+    * @param string $key
+    * @param string $fields
+     * @return array|false
+     */
+    public function hmget($key, $fields): array|false
+    {
+        return parent::hmget($key, $fields);
+    }
 }

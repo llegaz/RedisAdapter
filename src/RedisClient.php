@@ -132,4 +132,14 @@ class RedisClient extends Redis implements RedisClientInterface
 
         return $result === false ? null : $result;
     }
+
+    /**
+    * @param string $key
+    * @param string $fields
+     * @return array|false
+     */
+    public function hmget($key, $fields): array|false
+    {
+        return parent::hmget($key, $fields);
+    }
 }
