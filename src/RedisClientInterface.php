@@ -45,4 +45,10 @@ interface RedisClientInterface
      * @return string
      */
     public function toString(): string;
+
+    /**
+    * @param string $key
+    * @param int $ttl
+    */
+    public function expire($key, $ttl): int|bool;
 }

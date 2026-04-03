@@ -112,4 +112,11 @@ class PredisClient extends Client implements RedisClientInterface
         throw new UnexpectedException();
     }
 
+    /**
+    * @param string $key
+    * @param int $ttl
+    */
+    public function expire($key, $ttl): int|bool {
+        return parent::expire($key, $ttl);
+    }
 }
