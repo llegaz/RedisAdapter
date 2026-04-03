@@ -60,12 +60,17 @@ interface RedisClientInterface
      */
     public function hget($key, $field): string|null|false;
 
-        /**
+    /**
     * @param string $key
     * @param string $fields
      * @return array|false
      */
     public function hmget($key, $fields): array|false;
 
-
+    /**
+    * @param string $key
+    * @param string $field
+     * @return int|bool
+     */
+    public function hexists($key, $field): int|bool;
 }

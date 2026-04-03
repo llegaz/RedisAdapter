@@ -130,7 +130,7 @@ class PredisClient extends Client implements RedisClientInterface
     {
         return parent::hget($key, $field);
     }
-    
+
     /**
     * @param string $key
     * @param string $fields
@@ -139,5 +139,15 @@ class PredisClient extends Client implements RedisClientInterface
     public function hmget($key, $fields): array|false
     {
         return parent::hmget($key, $fields);
+    }
+
+    /**
+    * @param string $key
+    * @param string $field
+     * @return int|bool
+     */
+    public function hexists($key, $field): int|bool
+    {
+        return parent::hexists($key, $field);
     }
 }

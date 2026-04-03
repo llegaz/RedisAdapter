@@ -142,4 +142,14 @@ class RedisClient extends Redis implements RedisClientInterface
     {
         return parent::hmget($key, $fields);
     }
+
+    /**
+    * @param string $key
+    * @param string $field
+     * @return int|bool
+     */
+    public function hexists($key, $field): int|bool
+    {
+        return parent::hexists($key, $field);
+    }
 }
