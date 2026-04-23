@@ -150,4 +150,13 @@ class PredisClient extends Client implements RedisClientInterface
     {
         return parent::hexists($key, $field);
     }
+
+    /**
+    * @param string $key
+     * @return int
+     */
+    public function incr($key): int
+    {
+        return parent::incr($key);
+    }
 }

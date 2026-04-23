@@ -465,8 +465,10 @@ class RedisAdapterTest extends \PHPUnit\Framework\TestCase
                     $this->markTestIncomplete(
                         'Client ID collision detected (parallel test execution). ' .
                         "Client ID: {$pID} | " .
-                        "Previous config: {$previousCnfg['host']}:{$previousCnfg['port']} | " .
-                        "Current config: {$cnfg['host']}:{$cnfg['port']}"
+                        'Previous config: ' . ($previousCnfg['host'] ?? self::DEFAULTS['host'])
+                                . ':' . ($previousCnfg['port'] ?? self::DEFAULTS['port']) . ' | ' .
+                        'Current config: ' . ($cnfg['host'] ?? self::DEFAULTS['host'])
+                                . ':' . ($cnfg['port'] ?? self::DEFAULTS['port'])
                     );
                 }
                 $this->assertNotEquals($previousID, $pID);

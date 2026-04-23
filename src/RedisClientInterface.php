@@ -73,4 +73,10 @@ interface RedisClientInterface
      * @return int|bool
      */
     public function hexists($key, $field): int|bool;
+
+    /**
+    * @param string $key
+     * @return int
+     */
+    public function incr($key): int;
 }
