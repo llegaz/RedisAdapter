@@ -425,6 +425,10 @@ class RedisAdapter implements LoggerAwareInterface
      */
     public function getRedis(): RedisClientInterface
     {
+        /**
+         * @todo the f you don't have isConnect here !
+         *       + you should purge not connected client from pool
+         */
         return $this->client;
     }
 
