@@ -155,8 +155,29 @@ class PredisClient extends Client implements RedisClientInterface
     * @param string $key
      * @return int
      */
-    public function incr($key): int
+    /*public function incr($key): int
     {
         return parent::incr($key);
     }
+
+    public function sadd(string $key, array $members): int {
+        return parent::sadd($key, $members);
+    }
+
+    public function scard(string $key): int {
+        
+    }
+
+    public function sismember(string $key, mixed $member): bool {
+        
+    }
+
+    public function smembers(string $key): array {
+        
+    }
+
+    public function srem(string $key, array $members): int {
+        
+    }*/
+
 }

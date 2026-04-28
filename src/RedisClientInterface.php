@@ -78,5 +78,50 @@ interface RedisClientInterface
     * @param string $key
      * @return int
      */
-    public function incr($key): int;
+    //public function incr($key): int;
+
+    // next are SETs operations
+
+    /**
+     * Add one or more members
+     * 
+     * @param string $key
+     * @param array<string|int, mixed> $members
+     * @return int
+     */
+    //public function sadd(string $key, array $members): int;
+
+    /**
+     * Remove one or more members
+     * 
+     * @param string $key
+     * @param array<string|int, mixed> $members
+     * @return int
+     */
+    //public function srem(string $key, array $members): int;
+
+    /**
+     * Return all members
+     * 
+     * @param string $key
+     * @return array the set members
+     */
+    //public function smembers(string $key): array;
+
+    /**
+     * Check if a member exists
+     * 
+     * @param string $key
+     * @param mixed $member
+     * @return bool
+     */
+    //public function sismember(string $key, mixed $member): bool;
+
+    /**
+     * Count members
+     * 
+     * @param string $key
+     * @return int
+     */
+    //public function scard(string $key): int;
 }
