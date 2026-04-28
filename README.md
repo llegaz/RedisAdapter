@@ -35,7 +35,7 @@ apt install php8.1-xml php8.1-http php8.1-dom
 
 
 ## Dev
-install redis servers with docker (you will need a valid docker and docker-compose on your system)
+install redis servers with docker (you will need a valid docker and [docker compose](https://docs.docker.com/compose/install/) on your system)
 ```bash
 docker pull redis
 docker-compose -f docker-compose.yml up -d
@@ -49,5 +49,5 @@ You're welcome to propose things. I am open to criticism as long as it remains b
 Stay tuned, by following me on github, for new features using [predis](https://github.com/predis/predis) and [PHP Redis](https://github.com/phpredis/phpredis/).
 
 ---
-@see you space cowboy
+**@See** you space cowboy... 🚀
 ---

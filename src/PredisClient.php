@@ -112,4 +112,72 @@ class PredisClient extends Client implements RedisClientInterface
         throw new UnexpectedException();
     }
 
+    /**
+    * @param string $key
+    * @param int $ttl
+    */
+    public function expire($key, $ttl): int|bool
+    {
+        return parent::expire($key, $ttl);
+    }
+
+    /**
+    * @param string $key
+    * @param string $field
+     * @return string|null|false
+     */
+    public function hget($key, $field): ?string
+    {
+        return parent::hget($key, $field);
+    }
+
+    /**
+    * @param string $key
+    * @param string $fields
+     * @return array|false
+     */
+    public function hmget($key, $fields): array|false
+    {
+        return parent::hmget($key, $fields);
+    }
+
+    /**
+    * @param string $key
+    * @param string $field
+     * @return int|bool
+     */
+    public function hexists($key, $field): int|bool
+    {
+        return parent::hexists($key, $field);
+    }
+
+    /**
+    * @param string $key
+     * @return int
+     */
+    /*public function incr($key): int
+    {
+        return parent::incr($key);
+    }
+
+    public function sadd(string $key, array $members): int {
+        return parent::sadd($key, $members);
+    }
+
+    public function scard(string $key): int {
+        
+    }
+
+    public function sismember(string $key, mixed $member): bool {
+        
+    }
+
+    public function smembers(string $key): array {
+        
+    }
+
+    public function srem(string $key, array $members): int {
+        
+    }*/
+
 }
